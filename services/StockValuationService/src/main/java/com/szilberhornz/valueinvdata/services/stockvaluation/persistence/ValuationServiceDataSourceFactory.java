@@ -1,6 +1,8 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.persistence;
 
 import com.szilberhornz.valueinvdata.services.stockvaluation.AppContext;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.h2.jdbcx.JdbcDataSource;
 
 import javax.sql.DataSource;
@@ -12,9 +14,10 @@ public class ValuationServiceDataSourceFactory implements DataSourceFactory {
     public DataSource getValuationDBDataSource() {
         final boolean useMsSQL = AppContext.USE_MSSQL;
         if (useMsSQL) {
-            //todo
+            //todo create the MSSQL one assuming there is a working instance at the address with all the tables setup
             return null;
         } else {
+            //todo back this with HikariCP
             return this.createH2DBWithTSqlSyntax();
         }
     }
@@ -43,7 +46,10 @@ public class ValuationServiceDataSourceFactory implements DataSourceFactory {
             dataSource.setURL("jdbc:h2:mem:ValuationDB;MODE=MSSQLServer;DB_CLOSE_DELAY=-1");
             dataSource.setUser("sa");
             dataSource.setPassword("sa");
-            initializeDataBase(dataSource);
+            HikariConfig hikariConfig = new HikariConfig();
+            hikariConfig.setDataSource(dataSource);
+            HikariDataSource hikariDs = new HikariDataSource(hikariConfig);
+            initializeDataBase(hikariDs);
             return dataSource;
         }
 
