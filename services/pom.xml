@@ -12,9 +12,10 @@
     <name>Services-BOM</name>
 
     <modules>
-        <module>CompanyValuationService</module>
+        <module>StockValuationService</module>
     </modules>
 
+    <!-- Dependencies used by the service module -->
     <dependencyManagement>
         <dependencies>
 
