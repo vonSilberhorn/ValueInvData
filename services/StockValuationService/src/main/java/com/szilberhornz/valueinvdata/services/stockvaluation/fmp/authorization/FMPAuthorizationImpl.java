@@ -1,4 +1,4 @@
-package com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization;
+package com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization;
 
 /**
  * This implementation retrieves the api key from VM Options (set as -DFMP_API_KEY=...)

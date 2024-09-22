@@ -1,4 +1,4 @@
-package com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization;
+package com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization;
 
 public class NoApiKeyFoundException extends Exception {
 

@@ -1,4 +1,4 @@
-package com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization;
+package com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization;
 
 /**
  * Interface to retrieve the api key for the Financial Modeling Prep website

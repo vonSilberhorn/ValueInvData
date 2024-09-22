@@ -2,8 +2,9 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.core;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.FMPClient;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization.NoApiKeyFoundException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.FMPClient;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization.NoApiKeyFoundException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization.FMPAuthorization;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 public class SVSHttpHandler implements HttpHandler {
 
@@ -52,7 +51,7 @@ public class SVSHttpHandler implements HttpHandler {
     /**
         This method exists only for convenience so people can send the api key via the url for testing.
         In a prod environment, the api key would be stored in a secret store. \
-        The {@link com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization.FMPAuthorization}
+        The {@link FMPAuthorization}
         interface intended to kind of emulate that, but of course we don't have a Vault here.
     */
     @Nullable

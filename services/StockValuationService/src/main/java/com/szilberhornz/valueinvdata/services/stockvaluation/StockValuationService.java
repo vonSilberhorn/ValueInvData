@@ -14,7 +14,6 @@ public class StockValuationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StockValuationService.class);
 
-
     public static void main(String[] args) throws IOException {
         final String serviceName = StockValuationService.class.getSimpleName();
         LOGGER.info("Hello world! This is a new demo service called {}", serviceName);

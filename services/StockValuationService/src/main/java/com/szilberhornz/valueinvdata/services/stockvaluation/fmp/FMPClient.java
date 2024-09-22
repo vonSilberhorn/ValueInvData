@@ -1,9 +1,9 @@
-package com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp;
+package com.szilberhornz.valueinvdata.services.stockvaluation.fmp;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization.FMPAuthorization;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization.FMPAuthorizationImpl;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.authorization.NoApiKeyFoundException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.fmp.dto.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.cache.ValuationCache;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization.FMPAuthorization;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authorization.NoApiKeyFoundException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.record.DiscountedCashFlowDTO;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -14,8 +14,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.HashMap;
-import java.util.Map;
 
 public class FMPClient {
 
@@ -26,17 +24,18 @@ public class FMPClient {
 
     private final FMPAuthorization authorization;
     private final HttpClient httpClient;
+    private final ValuationCache cache;
 
-    public FMPClient(FMPAuthorization authorization, HttpClient httpClient) {
+    public FMPClient(final FMPAuthorization authorization, final HttpClient httpClient, final ValuationCache cache) {
         this.authorization = authorization;
         this.httpClient = httpClient;
+        this.cache = cache;
     }
 
-    private Map<String, DiscountedCashFlowDTO> cache = new HashMap<>();
 
     public DiscountedCashFlowDTO getDiscountedCashFlow(final String ticker, String apiKey) throws NoApiKeyFoundException {
-        DiscountedCashFlowDTO dto = cache.get(ticker);
-        if (apiKey.isBlank()) {
+        DiscountedCashFlowDTO dto = cache.getDcfFromCache(ticker);
+        if (apiKey == null) {
             apiKey = new String( authorization.retrieveApiKey());
         }
         if (dto == null) {
@@ -53,7 +52,7 @@ public class FMPClient {
                 JSONObject object = array.getJSONObject(0);
                 dto = new DiscountedCashFlowDTO(object.getString("symbol"),
                         object.getString("date"), object.getDouble("dcf"), object.getDouble("Stock Price"));
-                cache.put(ticker, dto);
+                cache.putIntoDcfCache(ticker, dto);
             } catch (final IOException | InterruptedException ioException) {
                 LOGGER.error(ioException.getMessage());
             }
