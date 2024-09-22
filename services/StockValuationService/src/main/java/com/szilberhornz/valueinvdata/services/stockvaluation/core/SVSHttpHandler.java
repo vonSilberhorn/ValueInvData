@@ -19,13 +19,18 @@ public class SVSHttpHandler implements HttpHandler {
 
     final FMPClient fmpClient;
 
+    //todo this class or a delegate needs to know about the fmpClient, the cache and the DataSource
+    //this class should probably delegate work: if the app will only have one aggregator endpoint, then this class
+    //will need to asynchronously delegate tasks and implement circuit breaking. If I decide to have multiple
+    //endpoints instead, then it will have to delegate work based on the endpoints.
+
+    //todo combine with price target summary https://www.investopedia.com/terms/p/pricetarget.asp
     public SVSHttpHandler(FMPClient fmpClient) {
         this.fmpClient = fmpClient;
     }
 
     @Override
     public void handle(final HttpExchange exchange) throws IOException {
-
         LOGGER.info("Received http request {} {}",  exchange.getRequestMethod(), exchange.getRequestURI());
         String response;
         try {
