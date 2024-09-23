@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.szilberhornz</groupId>
     <artifactId>my-project-report-aggregate</artifactId>
-    <version>${project.version}</version>
+    <version>1.0-SNAPSHOT</version>
 
     <description>Aggregate Coverage Report</description>
 
@@ -13,7 +13,7 @@
         <dependency>
             <groupId>com.szilberhornz</groupId>
             <artifactId>StockValuationService</artifactId>
-            <version>${project.version}</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     <build>
@@ -21,6 +21,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
                 <executions>
                     <execution>
                         <id>report-aggregate</id>
