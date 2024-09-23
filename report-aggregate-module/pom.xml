@@ -6,6 +6,7 @@
     <groupId>com.szilberhornz</groupId>
     <artifactId>my-project-report-aggregate</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <description>Aggregate Coverage Report</description>
 
