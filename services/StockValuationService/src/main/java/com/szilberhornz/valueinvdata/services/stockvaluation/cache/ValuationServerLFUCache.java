@@ -3,7 +3,10 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.cache;
 
 import com.szilberhornz.valueinvdata.services.stockvaluation.AppContext;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -43,11 +46,11 @@ public class ValuationServerLFUCache extends ValuationServerCache {
 
     /**
      *  The get method is still O(1) while in a classic LFU it would be O(logN)
-     *  This method starts a thread and runs the {@link CacheEvictor#runEviction()} method in a non-blocking way
+     *  Every {@link ValuationServerLFUCache#rebalanceThreshold}-th call of this method starts a thread and runs the
+     *  {@link CacheEvictor#runEviction()} method in a non-blocking way
      */
     @Override
     @Nullable
-
     public RecordHolder get (final String ticker) {
         if (!valuationServerCache.containsKey(ticker)){
             return null;
@@ -55,12 +58,15 @@ public class ValuationServerLFUCache extends ValuationServerCache {
         this.counter++;
         this.frequencyMap.compute(ticker, (k, v) -> v == null ? 1 : v + 1);
         if (this.counter >= this.rebalanceThreshold) {
+            this.counter = 0;
             new CompletableFuture<>().completeAsync(()-> this.cacheEvictor);
         }
         return this.valuationServerCache.get(ticker);
     }
 
     class LFUEvictor implements CacheEvictor {
+
+        private static final Logger LOG = LoggerFactory.getLogger(LFUEvictor.class);
 
         final ValuationServerLFUCache cache;
 
@@ -70,8 +76,13 @@ public class ValuationServerLFUCache extends ValuationServerCache {
 
         @Override
         public void runEviction() {
+            final long start = System.nanoTime();
+            LOG.info("Starting rebalance and cash eviction scan");
             this.rebalanceFrequencyCounter();
             this.evictExcess();
+            final long end = System.nanoTime();
+            final long durationInMillis = Duration.ofNanos(end - start).toMillis();
+            LOG.info("Rebalance and cache eviction took {} milliseconds", durationInMillis);
         }
 
         private void rebalanceFrequencyCounter(){
@@ -88,6 +99,7 @@ public class ValuationServerLFUCache extends ValuationServerCache {
         private void evictExcess() {
             final int evictCount = this.cache.frequencyCounter.size() - capacity;
             if (evictCount > 0) {
+                LOG.info("Starting eviction of {} tickers", evictCount);
                 for (int i = 0; i < evictCount; i++) {
                     int lowestFrequency = this.cache.frequencyCounter.firstKey();
                     String leastFrequentKey = this.cache.frequencyCounter.get(lowestFrequency).getFirst();
@@ -102,6 +114,8 @@ public class ValuationServerLFUCache extends ValuationServerCache {
                         this.cache.frequencyCounter.remove(lowestFrequency);
                     }
                 }
+            } else {
+                LOG.info("No cache eviction needed at this time");
             }
         }
     }
