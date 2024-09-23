@@ -23,7 +23,11 @@ public final class AppContainer {
             return new ValuationServerNoEvictionCache();
         } else {
             LOG.info("Starting an LFU cache!");
-            return new ValuationServerLFUCache(AppContext.LFU_REBALANCE_THRESHOLD);
+            return new ValuationServerLFUCache(AppContext.LFU_REBALANCE_THRESHOLD, AppContext.LFU_CACHE_SIZE);
         }
+    }
+
+    public ValuationServerCache getCache() {
+        return this.cache;
     }
 }

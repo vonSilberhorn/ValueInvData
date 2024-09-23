@@ -1,7 +1,5 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.cache;
 
-
-import com.szilberhornz.valueinvdata.services.stockvaluation.AppContext;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public class ValuationServerLFUCache extends ValuationServerCache {
 
-    private final int capacity = AppContext.LFU_CACHE_SIZE;
+    private final int capacity;
     private final int rebalanceThreshold;
 
     //this will tell us when we need to trigger async eviction. This could very well be made thread safe by using the
@@ -40,8 +38,9 @@ public class ValuationServerLFUCache extends ValuationServerCache {
     private final Map<String, Integer> frequencyMap = new HashMap<>();
     private final TreeMap<Integer, LinkedHashSet<String>> frequencyCounter = new TreeMap<>();
 
-    public ValuationServerLFUCache(int rebalanceThreshold) {
+    public ValuationServerLFUCache(int rebalanceThreshold, int capacity) {
         this.rebalanceThreshold = rebalanceThreshold;
+        this.capacity = capacity;
     }
 
     /**
@@ -70,14 +69,14 @@ public class ValuationServerLFUCache extends ValuationServerCache {
 
         final ValuationServerLFUCache cache;
 
-        public LFUEvictor(ValuationServerLFUCache cache) {
+        LFUEvictor(ValuationServerLFUCache cache) {
             this.cache = cache;
         }
 
         @Override
         public void runEviction() {
             final long start = System.nanoTime();
-            LOG.info("Starting rebalance and cash eviction scan");
+            LOG.info("Starting rebalance and cache eviction scan");
             this.rebalanceFrequencyCounter();
             this.evictExcess();
             final long end = System.nanoTime();
@@ -87,12 +86,10 @@ public class ValuationServerLFUCache extends ValuationServerCache {
 
         private void rebalanceFrequencyCounter(){
             for (Map.Entry<String, Integer> entry : this.cache.frequencyMap.entrySet()) {
+                //update frequency
                 int frequency = this.cache.frequencyMap.get(entry.getKey());
-                this.cache.frequencyCounter.get(frequency).remove(entry.getKey());
-                if (this.cache.frequencyCounter.get(frequency).isEmpty()) {
-                    this.cache.frequencyCounter.remove(frequency);
-                }
-                this.cache.frequencyCounter.computeIfAbsent(frequency + 1, k -> new LinkedHashSet<>()).add(entry.getKey());
+                //update frequency counter
+                this.cache.frequencyCounter.computeIfAbsent(frequency, k -> new LinkedHashSet<>()).add(entry.getKey());
             }
         }
 
