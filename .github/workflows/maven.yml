@@ -1,0 +1,64 @@
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+          
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml
+    
+    - name: Java Unit Test and Analysis with SonarCloud
+      uses: bcgov-nr/action-test-and-analyse-java@main
+      with:
+        # Commands to run tests, start with '|' for multi-line
+        commands: | 
+            mvn -B verify -P all-tests checkstyle:checkstyle -Dcheckstyle.skip=false
+        # App/package directory
+        dir: backend
+        # Java version, defaults to 17 (LTS)
+        java-version: '21'
+        # Java package manager cache, defaults to maven
+        java-cache: maven
+        # Java distribution, defaults to temurin
+        java-distribution: 'temurin'
+        # SonarCloud command line arguments
+        sonar_args: |
+          -Dsonar.exclusions=**/coverage/**
+          -Dsonar.organization=bcgov-sonarcloud
+          -Dsonar.projectKey=bcgov_${{ github.repository }}
+        # Sonar token, provide unpopulated token for pre-setup (will skip)
+        sonar_token: ${{ secrets.SONAR_TOKEN }}
+        # Paths (array) used to trigger a build; e.g. ('./backend/' './frontend/)
+        triggers: ''
+        # Branch to diff against
+        diff_branch: ${{ github.event.repository.default_branch }}
+        # Non-default repository to clone (used for testing this action)
+        repository: ${{ github.repository }}
+        # Non-default branch to clone (used for testing this action)
+        branch: ''
+        # Events (array) to use with triggers; e.g. ("pull_request" "push" "workflow_dispatch")
+        triggers_event: "('pull_request')"
+    
+    - name: Update dependency graph
+      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
