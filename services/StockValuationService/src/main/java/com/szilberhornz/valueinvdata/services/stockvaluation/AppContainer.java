@@ -14,7 +14,8 @@ import java.net.http.HttpClient;
 
 class AppContainer {
 
-    //stateless, immutable client, therefore it's also reusable
+    //stateless, immutable client, therefore it's also reusable - each thread has their own stack memory and methods
+    // are created there per thread, so it is not creating a performance bottleneck
     final HttpClient httpClient = HttpClient.newHttpClient();
 
     final FMPAuthorization fmpAuthorization = new FMPAuthorizationImpl();
