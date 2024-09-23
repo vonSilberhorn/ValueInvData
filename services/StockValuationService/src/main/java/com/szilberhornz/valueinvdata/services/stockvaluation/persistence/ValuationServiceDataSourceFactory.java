@@ -8,6 +8,7 @@ import org.h2.jdbcx.JdbcDataSource;
 import javax.sql.DataSource;
 import java.sql.*;
 
+//todo split it to InMem + MsSQL and put the initializer sql statements in a resource file. Turn on MSSQL statement cache
 public class ValuationServiceDataSourceFactory implements DataSourceFactory {
 
     @Override
@@ -36,10 +37,35 @@ public class ValuationServiceDataSourceFactory implements DataSourceFactory {
 
     private static class H2DbInitializer {
 
-        private static final String CREATE_TABLE_VALUATION_DB = "CREATE TABLE valuation_db (Ticker varchar (255)," +
-                "Dcf varchar (255)" +
-                ")";
-        private static final String INITIALIZE_DATA_VALUATION_DB = "INSERT INTO valuation_db VALUES ('AAPL', '168.2')";
+        private static final String CREATE_TABLE_DCF =
+                "CREATE TABLE DiscountedCashFlowDb (Ticker VARCHAR (255) PRIMARY KEY," +
+                        "Dcf DECIMAL (12, 2)," +
+                        "Date DATE," +
+                        "StockPrice DECIMAL (12, 2)" +
+                        ")";
+        private static final String INITIALIZE_DCF = "INSERT INTO DiscountedCashFlowDb VALUES ('AAPL', 182.236, '2024-09-23', 228.2)";
+
+        private static final String CREATE_TABLE_PRICE_TARGET_SUMMARY =
+                "CREATE TABLE PriceTargetSummaryDb (" +
+                        "Ticker VARCHAR (255) PRIMARY KEY," +
+                        "LastMonth SMALLINT," +
+                        "LastMonthAvgPriceTarget DECIMAL (12, 2)," +
+                        "LastQuarter SMALLINT," +
+                        "LastQuarterAvgPriceTarget DECIMAL (12, 2)" +
+                        ")";
+        private static final String INITIALIZE_PRICE_TARGET = "INSERT INTO PriceTargetSummaryDb VALUES " +
+                "('AAPL', 5, 220.2, 11, 217.18)";
+
+        private static final String CREATE_TABLE_PRICE_TARGET_CONSENSUS =
+                "CREATE TABLE PriceTargetConsensusDb (" +
+                        "Ticker VARCHAR (255) PRIMARY KEY," +
+                        "TargetHigh DECIMAL (12, 2)," +
+                        "TargetLow DECIMAL (12, 2)," +
+                        "TargetConsensus DECIMAL (12, 2)," +
+                        "TargetMedian DECIMAL (12, 2)" +
+                        ")";
+        private static final String INITIALIZE_PRICE_TARGET_CONSENSUS = "INSERT INTO PriceTargetConsensusDb VALUES " +
+                "('AAPL', 240, 110, 189.18, 195)";
 
         public static DataSource getH2DbInstance(){
             org.h2.jdbcx.JdbcDataSource dataSource = new JdbcDataSource();
@@ -55,8 +81,12 @@ public class ValuationServiceDataSourceFactory implements DataSourceFactory {
 
         static void initializeDataBase(final DataSource dataSource) {
             try (final Connection conn = dataSource.getConnection(); final Statement stmt = conn.createStatement()) {
-                stmt.executeUpdate(CREATE_TABLE_VALUATION_DB);
-                stmt.executeUpdate(INITIALIZE_DATA_VALUATION_DB);
+                stmt.executeUpdate(CREATE_TABLE_DCF);
+                stmt.executeUpdate(CREATE_TABLE_PRICE_TARGET_SUMMARY);
+                stmt.executeUpdate(CREATE_TABLE_PRICE_TARGET_CONSENSUS);
+                stmt.executeUpdate(INITIALIZE_DCF);
+                stmt.executeUpdate(INITIALIZE_PRICE_TARGET);
+                stmt.executeUpdate(INITIALIZE_PRICE_TARGET_CONSENSUS);
             } catch (SQLException sqlException) {
                 System.out.println("Hot diggity damn!");
             }

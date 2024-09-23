@@ -25,6 +25,7 @@ public class SVSHttpHandler implements HttpHandler {
     //endpoints instead, then it will have to delegate work based on the endpoints.
 
     //todo combine with price target summary https://www.investopedia.com/terms/p/pricetarget.asp
+    // also add the price target consensus
     public SVSHttpHandler(FMPClient fmpClient) {
         this.fmpClient = fmpClient;
     }

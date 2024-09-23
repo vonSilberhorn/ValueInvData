@@ -5,6 +5,8 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.record.Discount
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+//todo add a thread safe counter for cache eviction. Write a cache evictor interface, implement it twice:
+// one should be no-op (for demo) the other should base eviction on the counter, but should not evict the most queried ones
 public class ValuationCache {
 
     //ConcurrentHashMap is thread safe but only locks parts of the map, so it is faster than the Collections.synchronizedMap

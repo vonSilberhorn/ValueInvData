@@ -19,7 +19,8 @@ public record DiscountedCashFlowDTO(String symbol, String dateString, double dcf
         return verboseValuation.toString();
     }
 
-    //todo make this String.format
+    //todo make this String.format and move this out of this class. Create an interface that gives back
+    // string response and implement it based on the running mode
     @Override
     public String toString() {
         return "On " + this.dateString() + " the discounted cash flow valuation model for " + this.symbol() +
