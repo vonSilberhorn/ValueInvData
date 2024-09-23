@@ -7,4 +7,8 @@ package com.szilberhornz.valueinvdata.services.stockvaluation;
  * only need a bounce to take effect.
  */
 public final class AppContext {
+
+    private AppContext() {
+        //hide implicit public constructor. This class will only contain constants so no need to instantiate
+    }
 }
