@@ -8,6 +8,17 @@ package com.szilberhornz.valueinvdata.services.stockvaluation;
  */
 public final class AppContext {
 
+    public static final boolean IS_DEMO_MODE = !"PROD".equalsIgnoreCase(System.getProperty("APP_MODE"));
+
+    //cache related stuff
+    private static final int DEFAULT_LFU_CACHE_SIZE = 2000;
+    private static final int DEFAULT_LFU_REBALANCE_THRESHOLD = 200;
+    private static final String LFU_CACHE_STRING = System.getProperty("LFU_CACHE_SIZE");
+    private static final String LFU_REBALANCE_STRING = System.getProperty("LFU_REBALANCE_THRESHOLD");
+    public static final boolean USE_LFU_CACHE = Boolean.parseBoolean(System.getProperty("USE_LFU_CACHE"));
+    public static final int LFU_CACHE_SIZE = LFU_CACHE_STRING == null ? DEFAULT_LFU_CACHE_SIZE : Integer.parseInt(LFU_CACHE_STRING);
+    public static final int LFU_REBALANCE_THRESHOLD = LFU_REBALANCE_STRING == null ? DEFAULT_LFU_REBALANCE_THRESHOLD : Integer.parseInt(LFU_REBALANCE_STRING);
+
     private AppContext() {
         //hide implicit public constructor. This class will only contain constants so no need to instantiate
     }

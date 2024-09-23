@@ -28,6 +28,12 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-reload4j</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <scope>compile</scope>
+        </dependency>
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -44,5 +50,6 @@
             <artifactId>junit-pioneer</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 </project>

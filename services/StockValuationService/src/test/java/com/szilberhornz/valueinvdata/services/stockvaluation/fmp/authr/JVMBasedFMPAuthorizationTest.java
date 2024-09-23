@@ -7,7 +7,7 @@ import org.junitpioneer.jupiter.SetSystemProperty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class JVMBasedFMPAuthorizationTest {
+class JVMBasedFMPAuthorizationTest {
 
     final FMPAuthorization sut = new JVMBasedFMPAuthorization();
 
