@@ -22,15 +22,16 @@ import java.time.Duration;
  * of the application (unless of course it doesn't use in-memory db) so any failure should mean the
  * termination of the app.
  */
-public final class InMemoryDbDataSourceFactory implements DataSourceFactory {
+public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(InMemoryDbDataSourceFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InMemoryDBDataSourceFactory.class);
 
     private final String initializerResourcePath;
 
     private final DataSource dataSource;
 
-    public InMemoryDbDataSourceFactory(String initializerResourcePath) {
+    //only one instance of this should exist, instantiated in the AppContainer class
+    public InMemoryDBDataSourceFactory(String initializerResourcePath) {
         this.initializerResourcePath = initializerResourcePath;
         this.dataSource = this.getHikariWrappedH2Instance();
         this.initializeInMemoryH2Db(this.dataSource);
@@ -61,12 +62,22 @@ public final class InMemoryDbDataSourceFactory implements DataSourceFactory {
         final InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(this.initializerResourcePath);
         if (in != null) {
             final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            int sqlStatementCount = 0;
             while (reader.ready()) {
+                sqlStatementCount++;
                 final String sql = reader.readLine();
                 LOG.info("Executing initializer statement: {}", sql);
                 statement.execute(sql);
             }
-            LOG.info("Finished the execution of all initializer sql statements!");
+            if (sqlStatementCount == 0) {
+                throw new InMemoryDBInitializationFailedException("In-memory DB initialization failed because the " +
+                        "initializer file didn't have any sql statements in it!\n" +
+                        "At least the 'create table' statements must be present for successful startup!");
+            } else {
+                LOG.info("Finished the execution of {} initializer sql statements!", sqlStatementCount);
+            }
+        } else {
+            throw new InMemoryDBInitializationFailedException("In-memory DB initializer file doesn't exist!");
         }
     }
 
