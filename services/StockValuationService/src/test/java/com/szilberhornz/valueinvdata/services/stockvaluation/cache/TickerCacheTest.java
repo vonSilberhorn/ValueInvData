@@ -18,14 +18,14 @@ class TickerCacheTest {
     @Test
     void testInitializationWithNonexistentFile(){
         String testResourceFileName = "nonexistentTickersFile.txt";
-        final Exception exception = assertThrows(RuntimeException.class, () -> new TickerCache(testResourceFileName));
+        final Exception exception = assertThrows(TickerCacheLoadingFailedException.class, () -> new TickerCache(testResourceFileName));
         assertEquals("Ticker cache loading failed because the resource file nonexistentTickersFile.txt does not exist or is empty!", exception.getMessage());
     }
 
     @Test
     void testEmptyInitialization(){
         String testResourceFileName = "emptyTickersFile.txt";
-        final Exception exception = assertThrows(RuntimeException.class, () -> new TickerCache(testResourceFileName));
+        final Exception exception = assertThrows(TickerCacheLoadingFailedException.class, () -> new TickerCache(testResourceFileName));
         assertEquals("Ticker cache loading failed because the resource file emptyTickersFile.txt does not exist or is empty!", exception.getMessage());
     }
 }

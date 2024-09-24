@@ -38,10 +38,10 @@ public final class TickerCache {
                     TICKER_CACHE.add(next.substring(1, next.length()-1));
                 }
             } else {
-                throw new RuntimeException("Ticker cache loading failed because the resource file " + this.resourceFileName + " does not exist or is empty!");
+                throw new TickerCacheLoadingFailedException("Ticker cache loading failed because the resource file " + this.resourceFileName + " does not exist or is empty!");
             }
         } catch (IOException ioe){
-            throw new RuntimeException("Ticker cache loading failed due to the following reason: ", ioe);
+            throw new TickerCacheLoadingFailedException("Ticker cache loading failed due to the following reason: ", ioe);
         }
     }
 }
