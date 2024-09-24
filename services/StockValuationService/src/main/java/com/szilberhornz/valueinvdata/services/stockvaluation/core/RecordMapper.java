@@ -27,11 +27,11 @@ public final class RecordMapper {
     @Nullable
     public static DiscountedCashFlowDTO newDcfDto(final HttpResponse<String> response) {
         try {
-            JSONArray array = new JSONArray(response.body());
-            JSONObject object = array.getJSONObject(0);
+            final JSONArray array = new JSONArray(response.body());
+            final JSONObject object = array.getJSONObject(0);
             return new DiscountedCashFlowDTO(object.getString("symbol"),
                     object.getString("date"), object.getDouble("dcf"), object.getDouble("Stock Price"));
-        } catch (RuntimeException exception) {
+        } catch (final RuntimeException exception) {
             LOG.error("Unexpected error happened while parsing HttpResponse to DcfDto. The response body is: {}", response.body(), exception);
             return null;
         }
@@ -39,11 +39,11 @@ public final class RecordMapper {
 
     public static PriceTargetConsensusDTO newPtcDto(final HttpResponse<String> response){
         try {
-            JSONArray array = new JSONArray(response.body());
-            JSONObject object = array.getJSONObject(0);
+            final JSONArray array = new JSONArray(response.body());
+            final JSONObject object = array.getJSONObject(0);
             return new PriceTargetConsensusDTO(object.getString("symbol"),
                     object.getDouble("targetHigh"), object.getDouble("targetLow"), object.getDouble("targetConsensus"), object.getDouble("targetMedian"));
-        } catch (RuntimeException exception) {
+        } catch (final RuntimeException exception) {
             LOG.error("Unexpected error happened while parsing HttpResponse to PtcDto. The response body is: {}", response.body(), exception);
             return null;
         }
@@ -51,11 +51,11 @@ public final class RecordMapper {
 
     public static PriceTargetSummaryDTO newPtsDto(final HttpResponse<String> response){
         try {
-            JSONArray array = new JSONArray(response.body());
-            JSONObject object = array.getJSONObject(0);
+            final JSONArray array = new JSONArray(response.body());
+            final JSONObject object = array.getJSONObject(0);
             return new PriceTargetSummaryDTO(object.getString("symbol"),
                     object.getInt("lastMonth"), object.getDouble("lastMonthAvgPriceTarget"), object.getInt("lastQuarter"), object.getDouble("lastQuarterAvgPriceTarget"));
-        } catch (RuntimeException exception) {
+        } catch (final RuntimeException exception) {
             LOG.error("Unexpected error happened while parsing HttpResponse to PtsDto. The response body is: {}", response.body(), exception);
             return null;
         }
@@ -63,7 +63,8 @@ public final class RecordMapper {
 
     @Nullable
     public static RecordHolder newRecord(final ResultSet resultSet) throws SQLException {
-        final List<Object> tempList = new ArrayList<>(14);
+        final int expectedSize = 14;
+        final List<Object> tempList = new ArrayList<>(expectedSize);
         final ResultSetMetaData metaData = resultSet.getMetaData();
         final int columnCount = metaData.getColumnCount();
         while (resultSet.next()) {
@@ -71,7 +72,7 @@ public final class RecordMapper {
                 tempList.add(resultSet.getObject(i));
             }
         }
-        if (tempList.size() > 14) {
+        if (tempList.size() > expectedSize) {
             //this is to make sure we don't go full Jurassic Park and fail to notice that we have more items than we should!
             throw new IllegalStateException("The ResultSet unexpectedly held more than one row of data! This should " +
                     "not have happened as the ticker is the primary key in the db tables and we only have 14 columns!");
@@ -89,8 +90,8 @@ public final class RecordMapper {
         PriceTargetSummaryDTO ptsDto = null;
         PriceTargetConsensusDTO ptcDto = null;
         String ticker = null;
-        List<Object> dcfSublist = dataList.subList(0, 4);
-        int dcfNullCount = (int) dcfSublist.stream().filter(Objects::isNull).count();
+        final List<Object> dcfSublist = dataList.subList(0, 4);
+        final int dcfNullCount = (int) dcfSublist.stream().filter(Objects::isNull).count();
         if (dcfNullCount == 0) {
             ticker = (String) dcfSublist.getFirst();
             dcfDto = new DiscountedCashFlowDTO(
@@ -100,8 +101,8 @@ public final class RecordMapper {
                     ((BigDecimal) dcfSublist.getLast()).doubleValue()
             );
         }
-        List<Object> ptsSubList = dataList.subList(4, 9);
-        int ptsNullCount = (int) ptsSubList.stream().filter(Objects::isNull).count();
+        final List<Object> ptsSubList = dataList.subList(4, 9);
+        final int ptsNullCount = (int) ptsSubList.stream().filter(Objects::isNull).count();
         if (ptsNullCount == 0) {
             if (ticker == null) {
                 ticker = (String) ptsSubList.getFirst();
@@ -114,8 +115,8 @@ public final class RecordMapper {
                     ((BigDecimal) ptsSubList.getLast()).doubleValue()
             );
         }
-        List<Object> ptcSubList = dataList.subList(9, 14);
-        int ptcNullCount = (int) ptcSubList.stream().filter(Objects::isNull).count();
+        final List<Object> ptcSubList = dataList.subList(9, 14);
+        final int ptcNullCount = (int) ptcSubList.stream().filter(Objects::isNull).count();
         if (ptcNullCount == 0){
             if (ticker == null) {
                 ticker = (String) ptcSubList.getFirst();

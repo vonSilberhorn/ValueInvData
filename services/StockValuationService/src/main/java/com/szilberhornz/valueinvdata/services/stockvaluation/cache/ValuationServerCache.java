@@ -17,7 +17,7 @@ public abstract class ValuationServerCache {
 
     public abstract RecordHolder get(String ticker);
 
-    public void put(String ticker, DiscountedCashFlowDTO dcfDto) {
+    public void put(final String ticker, final DiscountedCashFlowDTO dcfDto) {
         if (!this.valuationServerCache.containsKey(ticker)) {
             final RecordHolder recordHolder = new RecordHolder(ticker);
             recordHolder.setDiscountedCashFlowDto(dcfDto);
@@ -27,7 +27,7 @@ public abstract class ValuationServerCache {
         }
     }
 
-    public void put(String ticker, PriceTargetConsensusDTO ptcDto) {
+    public void put(final String ticker, final PriceTargetConsensusDTO ptcDto) {
         if (!this.valuationServerCache.containsKey(ticker)) {
             final RecordHolder recordHolder = new RecordHolder(ticker);
             recordHolder.setPriceTargetConsensusDto(ptcDto);
@@ -37,7 +37,7 @@ public abstract class ValuationServerCache {
         }
     }
 
-    public void put(String ticker, PriceTargetSummaryDTO ptsDto) {
+    public void put(final String ticker, final PriceTargetSummaryDTO ptsDto) {
         if (!this.valuationServerCache.containsKey(ticker)) {
             final RecordHolder recordHolder = new RecordHolder(ticker);
             recordHolder.setPriceTargetSummaryDto(ptsDto);

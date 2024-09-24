@@ -38,7 +38,7 @@ public class ValuationServerLFUCache extends ValuationServerCache {
     private final Map<String, Integer> frequencyMap = new HashMap<>();
     private final TreeMap<Integer, LinkedHashSet<String>> frequencyCounter = new TreeMap<>();
 
-    public ValuationServerLFUCache(int rebalanceThreshold, int capacity) {
+    public ValuationServerLFUCache(final int rebalanceThreshold, final int capacity) {
         this.rebalanceThreshold = rebalanceThreshold;
         this.capacity = capacity;
     }
@@ -51,7 +51,7 @@ public class ValuationServerLFUCache extends ValuationServerCache {
     @Override
     @Nullable
     public RecordHolder get (final String ticker) {
-        if (!valuationServerCache.containsKey(ticker)){
+        if (!this.valuationServerCache.containsKey(ticker)){
             return null;
         }
         this.counter++;
@@ -69,7 +69,7 @@ public class ValuationServerLFUCache extends ValuationServerCache {
 
         final ValuationServerLFUCache cache;
 
-        LFUEvictor(ValuationServerLFUCache cache) {
+        LFUEvictor(final ValuationServerLFUCache cache) {
             this.cache = cache;
         }
 
@@ -85,21 +85,21 @@ public class ValuationServerLFUCache extends ValuationServerCache {
         }
 
         private void rebalanceFrequencyCounter(){
-            for (Map.Entry<String, Integer> entry : this.cache.frequencyMap.entrySet()) {
+            for (final Map.Entry<String, Integer> entry : this.cache.frequencyMap.entrySet()) {
                 //update frequency
-                int frequency = this.cache.frequencyMap.get(entry.getKey());
+                final int frequency = this.cache.frequencyMap.get(entry.getKey());
                 //update frequency counter
                 this.cache.frequencyCounter.computeIfAbsent(frequency, k -> new LinkedHashSet<>()).add(entry.getKey());
             }
         }
 
         private void evictExcess() {
-            final int evictCount = this.cache.frequencyCounter.size() - capacity;
+            final int evictCount = this.cache.frequencyCounter.size() - ValuationServerLFUCache.this.capacity;
             if (evictCount > 0) {
                 LOG.info("Starting eviction of {} tickers", evictCount);
                 for (int i = 0; i < evictCount; i++) {
-                    int lowestFrequency = this.cache.frequencyCounter.firstKey();
-                    String leastFrequentKey = this.cache.frequencyCounter.get(lowestFrequency).getFirst();
+                    final int lowestFrequency = this.cache.frequencyCounter.firstKey();
+                    final String leastFrequentKey = this.cache.frequencyCounter.get(lowestFrequency).getFirst();
 
                     // Remove from cache and frequency maps
                     this.cache.valuationServerCache.remove(leastFrequentKey);

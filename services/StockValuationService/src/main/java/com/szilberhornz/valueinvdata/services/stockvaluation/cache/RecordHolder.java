@@ -21,7 +21,7 @@ public class RecordHolder {
     private PriceTargetConsensusDTO priceTargetConsensusDto;
     private PriceTargetSummaryDTO priceTargetSummaryDto;
 
-    private RecordHolder(String ticker, DiscountedCashFlowDTO discountedCashFlowDto, PriceTargetConsensusDTO priceTargetConsensusDto, PriceTargetSummaryDTO priceTargetSummaryDto) {
+    private RecordHolder(final String ticker, final DiscountedCashFlowDTO discountedCashFlowDto, final PriceTargetConsensusDTO priceTargetConsensusDto, final PriceTargetSummaryDTO priceTargetSummaryDto) {
         this.ticker = ticker;
         this.discountedCashFlowDto = discountedCashFlowDto;
         this.priceTargetConsensusDto = priceTargetConsensusDto;
@@ -29,48 +29,48 @@ public class RecordHolder {
     }
 
     //we allow outside entities to get an immutable instance - immutable for them as they don't see the accessors
-    public static RecordHolder newRecordHolder(@NotNull String ticker, @Nullable DiscountedCashFlowDTO dcfDto, @Nullable PriceTargetConsensusDTO ptcDto, @Nullable PriceTargetSummaryDTO ptsDto){
+    public static RecordHolder newRecordHolder(@NotNull final String ticker, @Nullable final DiscountedCashFlowDTO dcfDto, @Nullable final PriceTargetConsensusDTO ptcDto, @Nullable final PriceTargetSummaryDTO ptsDto){
         return new RecordHolder(ticker, dcfDto, ptcDto, ptsDto);
     }
 
     //we don't allow anyone to construct this object outside the actual cache implementors
-    RecordHolder(String ticker) {
+    RecordHolder(final String ticker) {
         this.ticker = ticker;
     }
 
     @NotNull
     public String getTicker() {
-        return ticker;
+        return this.ticker;
     }
 
     @Nullable
     public DiscountedCashFlowDTO getDiscountedCashFlowDto() {
-        return discountedCashFlowDto;
+        return this.discountedCashFlowDto;
     }
 
 
     //we don't allow anyone to access setters outside the actual cache package
-    void setDiscountedCashFlowDto(DiscountedCashFlowDTO discountedCashFlowDto) {
+    void setDiscountedCashFlowDto(final DiscountedCashFlowDTO discountedCashFlowDto) {
         this.discountedCashFlowDto = discountedCashFlowDto;
     }
 
     @Nullable
     public PriceTargetConsensusDTO getPriceTargetConsensusDto() {
-        return priceTargetConsensusDto;
+        return this.priceTargetConsensusDto;
     }
 
     //we don't allow anyone to access setters outside the actual cache package
-    void setPriceTargetConsensusDto(PriceTargetConsensusDTO priceTargetConsensusDto) {
+    void setPriceTargetConsensusDto(final PriceTargetConsensusDTO priceTargetConsensusDto) {
         this.priceTargetConsensusDto = priceTargetConsensusDto;
     }
 
     @Nullable
     public PriceTargetSummaryDTO getPriceTargetSummaryDto() {
-        return priceTargetSummaryDto;
+        return this.priceTargetSummaryDto;
     }
 
     //we don't allow anyone to access setters outside the actual cache package
-    void setPriceTargetSummaryDto(PriceTargetSummaryDTO priceTargetSummaryDto) {
+    void setPriceTargetSummaryDto(final PriceTargetSummaryDTO priceTargetSummaryDto) {
         this.priceTargetSummaryDto = priceTargetSummaryDto;
     }
 }

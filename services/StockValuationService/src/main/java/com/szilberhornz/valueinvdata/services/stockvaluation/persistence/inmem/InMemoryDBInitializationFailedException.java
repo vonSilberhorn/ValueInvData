@@ -6,11 +6,11 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.persistence.inmem;
  */
 public class InMemoryDBInitializationFailedException extends IllegalStateException {
 
-    public InMemoryDBInitializationFailedException(String message) {
+    public InMemoryDBInitializationFailedException(final String message) {
         super(message);
     }
 
-    public InMemoryDBInitializationFailedException(String message, Throwable cause) {
+    public InMemoryDBInitializationFailedException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

@@ -40,10 +40,10 @@ public class InMemoryValuationDB implements ValuationDBRepository {
 
     //In memory is in memory, we don't retry in case of SQL exceptions like we should in case of over the network calls
     @Override
-    public RecordHolder queryRecords(String ticker) {
+    public RecordHolder queryRecords(final String ticker) {
         LOG.info("Starting to query database for the records on ticker {}...", ticker);
         final long start = System.nanoTime();
-        try(final Connection conn = dataSource.getConnection(); final PreparedStatement pStmt = conn.prepareStatement(QUERY_ALL_DATA_FOR_TICKER)){
+        try(final Connection conn = this.dataSource.getConnection(); final PreparedStatement pStmt = conn.prepareStatement(QUERY_ALL_DATA_FOR_TICKER)){
             pStmt.setString(1, ticker);
             final ResultSet resultSet = pStmt.executeQuery();
             final RecordHolder recordHolder = RecordMapper.newRecord(resultSet);
@@ -51,7 +51,7 @@ public class InMemoryValuationDB implements ValuationDBRepository {
             final long durationInMillis = Duration.ofNanos(end - start).toMillis();
             LOG.info("Querying the database for the records on ticker {} took {} milliseconds", ticker, durationInMillis);
             return recordHolder;
-        } catch (SQLException sqlException) {
+        } catch (final SQLException sqlException) {
             LOG.error("SQL execution to query for ticker {} failed due to the following reason:", ticker, sqlException);
             return null;
         }
@@ -74,10 +74,10 @@ public class InMemoryValuationDB implements ValuationDBRepository {
         //we can run these asynchronously using the ForkJoinPool as the backing Hikari pool has 5 db connections waiting to be used
         LOG.info("Starting parallel execution of database writes...");
         final long start = System.nanoTime();
-        CompletableFuture<Void> c1 = CompletableFuture.runAsync(()->this.writeDiscountedCashFlowTable(recordHolder.getDiscountedCashFlowDto()));
-        CompletableFuture<Void> c2 = CompletableFuture.runAsync(()->this.writePriceTargetSummaryTable(recordHolder.getPriceTargetSummaryDto()));
-        CompletableFuture<Void> c3 = CompletableFuture.runAsync(()->this.writePriceTargetConsensusTable(recordHolder.getPriceTargetConsensusDto()));
-        CompletableFuture<Void> c4 = CompletableFuture.allOf(c1, c2, c3);
+        final CompletableFuture<Void> c1 = CompletableFuture.runAsync(()->this.writeDiscountedCashFlowTable(recordHolder.getDiscountedCashFlowDto()));
+        final CompletableFuture<Void> c2 = CompletableFuture.runAsync(()->this.writePriceTargetSummaryTable(recordHolder.getPriceTargetSummaryDto()));
+        final CompletableFuture<Void> c3 = CompletableFuture.runAsync(()->this.writePriceTargetConsensusTable(recordHolder.getPriceTargetConsensusDto()));
+        final CompletableFuture<Void> c4 = CompletableFuture.allOf(c1, c2, c3);
         this.awaitAndHandleParallelExecution(c4, start);
     }
 

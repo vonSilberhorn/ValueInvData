@@ -21,7 +21,7 @@ public class FMPRequestResponseHandler {
 
     final FMPApiHttpClient client;
 
-    public FMPRequestResponseHandler(FMPApiHttpClient client) {
+    public FMPRequestResponseHandler(final FMPApiHttpClient client) {
         this.client = client;
     }
 
@@ -74,7 +74,7 @@ public class FMPRequestResponseHandler {
     }
 
     @Nullable
-    private HttpResponse<String> handlePossibleRetry(Callable<HttpResponse<String>> callable, final String logMsg) throws NoApiKeyFoundException {
+    private HttpResponse<String> handlePossibleRetry(final Callable<HttpResponse<String>> callable, final String logMsg) throws NoApiKeyFoundException {
         //try api call for the first time
         HttpResponse<String> response = this.tryApiCall(callable, logMsg);
         //try again if needed, but only once
@@ -91,12 +91,12 @@ public class FMPRequestResponseHandler {
 
     //we want to propagate the NoApiKeyFoundException so we can return 401 to the caller
     @Nullable
-    private HttpResponse<String> tryApiCall(Callable<HttpResponse<String>> callable, final String logMsg) throws NoApiKeyFoundException {
+    private HttpResponse<String> tryApiCall(final Callable<HttpResponse<String>> callable, final String logMsg) throws NoApiKeyFoundException {
         try {
             return callable.call();
-        } catch (NoApiKeyFoundException noApiKeyFoundException) {
+        } catch (final NoApiKeyFoundException noApiKeyFoundException) {
             throw noApiKeyFoundException;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("FMP api call failed for the {} client api method!", logMsg, e);
             return null;
         }

@@ -31,7 +31,7 @@ public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
     private final DataSource dataSource;
 
     //only one instance of this should exist, instantiated in the AppContainer class
-    public InMemoryDBDataSourceFactory(String initializerResourcePath) {
+    public InMemoryDBDataSourceFactory(final String initializerResourcePath) {
         this.initializerResourcePath = initializerResourcePath;
         this.dataSource = this.getHikariWrappedH2Instance();
         this.initializeInMemoryH2Db(this.dataSource);
@@ -44,11 +44,11 @@ public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
 
     private void initializeInMemoryH2Db(final DataSource dataSource) {
         LOG.info("Starting in-memory H2DB initialization!");
-        long start = System.nanoTime();
+        final long start = System.nanoTime();
         try (final Connection connection = dataSource.getConnection();
              final Statement statement = connection.createStatement()) {
             this.executeInitializerSqlStatements(statement);
-            long end = System.nanoTime();
+            final long end = System.nanoTime();
             final long durationInMillis = Duration.ofNanos(end - start).toMillis();
             LOG.info("In-memory H2DB initialization finished in {} milliseconds!", durationInMillis);
         } catch (final SQLException | IOException exception) {
@@ -82,24 +82,25 @@ public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
     }
 
     private DataSource getHikariWrappedH2Instance() {
-        org.h2.jdbcx.JdbcDataSource dataSource = new JdbcDataSource();
+        final org.h2.jdbcx.JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:ValuationDB;MODE=MSSQLServer;DB_CLOSE_DELAY=-1");
         dataSource.setUser("sa");
         dataSource.setPassword("sa");
-        HikariConfig hikariConfig = createInMemConfigForHikari();
+        final HikariConfig hikariConfig = this.createInMemConfigForHikari();
         hikariConfig.setDataSource(dataSource);
         return new HikariDataSource(hikariConfig);
     }
 
     private HikariConfig createInMemConfigForHikari() {
-        HikariConfig hikariConfig = new HikariConfig();
+        final HikariConfig hikariConfig = new HikariConfig();
         //fixed pool of 5 connections, probably way more than enough already,
         // but smaller than the Hikari default 10
         hikariConfig.setMaximumPoolSize(5);
         hikariConfig.setMinimumIdle(5);
         hikariConfig.setPoolName("InMemoryH2DBHikariPool");
         //idle connection health checks every 2 minutes
-        hikariConfig.setKeepaliveTime(2 * 60 * 1000);
+        final long twoMinutesInMillis = 2 * 60 * 1000;
+        hikariConfig.setKeepaliveTime(twoMinutesInMillis);
         return hikariConfig;
     }
 }

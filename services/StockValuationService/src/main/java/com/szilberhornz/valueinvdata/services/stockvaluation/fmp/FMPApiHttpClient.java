@@ -44,7 +44,7 @@ public class FMPApiHttpClient {
         final String uri = DCF_ENDPOINT +
                 ticker +
                 API_KEY +
-                new String(authorizer.retrieveApiKey());
+                new String(this.authorizer.retrieveApiKey());
         final String logMsg = "discounted cashflow";
         return this.getResponse(ticker, uri, logMsg);
     }
@@ -54,7 +54,7 @@ public class FMPApiHttpClient {
         final String uri = PTC_ENDPOINT +
                 ticker +
                 API_KEY_AND +
-                new String(authorizer.retrieveApiKey());
+                new String(this.authorizer.retrieveApiKey());
         final String logMsg = "price target consensus";
         return this.getResponse(ticker, uri, logMsg);
     }
@@ -64,31 +64,31 @@ public class FMPApiHttpClient {
         final String uri = PTS_ENDPOINT +
                 ticker +
                 API_KEY_AND +
-                new String(authorizer.retrieveApiKey());
+                new String(this.authorizer.retrieveApiKey());
         final String logMsg = "price target summary";
         return this.getResponse(ticker, uri, logMsg);
     }
 
     @Nullable
-    private HttpResponse<String> getResponse(final String ticker, final String uri, final String logMsg){
+    private HttpResponse<String> getResponse(final String ticker, final String uri, final String logMsg) {
         LOGGER.info("Creating an FMP {} http request for {}", logMsg, ticker);
         final long start = System.nanoTime();
         try (final HttpClient client = this.httpClientFactory.newDefaultHttpClient()) {
-            HttpRequest request = HttpRequest.newBuilder()
+            final HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(uri))
                     .GET()
                     .version(HttpClient.Version.HTTP_2)
                     .build();
             LOGGER.info("The {} FMP http request for {} has been sent", logMsg, ticker);
-            HttpResponse<String> response =
+            final HttpResponse<String> response =
                     client.send(request, HttpResponse.BodyHandlers.ofString());
             final long end = System.nanoTime();
             final long durationInMillis = Duration.ofNanos(end - start).toMillis();
             LOGGER.info("Received {} http response from FMP for {}. The http exchange took {} milliseconds", logMsg, ticker, durationInMillis);
             return response;
-        } catch (IOException ioException) {
+        } catch (final IOException ioException) {
             LOGGER.error("An unexpected I/O Exception happened while trying to query for {} on the FMP api", ticker, ioException);
-        } catch (InterruptedException interruptedException) {
+        } catch (final InterruptedException interruptedException) {
             LOGGER.error("The thread executing the FMP api request got unexpectedly interrupted!");
             Thread.currentThread().interrupt();
         }

@@ -6,11 +6,11 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.cache;
  */
 public class TickerCacheLoadingFailedException extends IllegalStateException {
 
-    public TickerCacheLoadingFailedException(String message) {
+    public TickerCacheLoadingFailedException(final String message) {
         super(message);
     }
 
-    public TickerCacheLoadingFailedException(String message, Throwable cause) {
+    public TickerCacheLoadingFailedException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }

@@ -21,7 +21,7 @@ public final class TickerCache {
 
     private final String resourceFileName;
 
-    public TickerCache(String resourceFileName) {
+    public TickerCache(final String resourceFileName) {
         this.resourceFileName = resourceFileName;
         this.loadCache();
     }
@@ -33,7 +33,7 @@ public final class TickerCache {
     //this currentThread() in the method should always be the [main] since initialization happens in the AppContainer, before
     //the app starts the http server
     private void loadCache(){
-        try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(this.resourceFileName)){
+        try (final InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(this.resourceFileName)){
             if (in != null) {
                 final Scanner scanner = new Scanner(in, StandardCharsets.UTF_8).useDelimiter(",");
                 while (scanner.hasNext()) {
