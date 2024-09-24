@@ -9,9 +9,11 @@ import java.util.Set;
 
 /**
  * This is a constant size cache for all the existing tickers, used to verify user-input.
- * This is a mission-critical class, failing to load a cache means that any caller can swarm the application
+ * This is a mission-critical class, failing to load a cache means that any caller can attack the application
  * with invalid requests, depleting the rate limits of the FMP api key for absolutely no meaningful benefits.
- * So if this class, cannot initialize, the application should exit instead of skipping over the issue.
+ * This also helps to prevent SQL-injection, although for any parameterized query, only PreparedStatements should
+ * be used anyway.
+ * If this cannot initialize, the application should exit instead of skipping over the issue.
  */
 public final class TickerCache {
 

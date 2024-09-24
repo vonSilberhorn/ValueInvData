@@ -3,8 +3,6 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.cache;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,63 +44,6 @@ public abstract class ValuationServerCache {
             this.valuationServerCache.put(ticker, recordHolder);
         } else if (this.valuationServerCache.get(ticker).getDiscountedCashFlowDto() == null) {
             this.valuationServerCache.get(ticker).setPriceTargetSummaryDto(ptsDto);
-        }
-    }
-
-    /**
-     *   This is a static nested class to prevent outside entities to change the state of its instances: e.g. a class looking up
-     *   cached items should be able to see what is inside the item, but changes should only be made within the
-     *   {@link ValuationServerCache} class or its children, to ensure the consistency of the cache itself.
-     *   <p/>
-     *   No need to synchronize this class due to the fact that the ConcurrentHashMap locks the bucket when performing write operations
-     */
-    public static class RecordHolder {
-
-        private final String ticker;
-
-        private DiscountedCashFlowDTO discountedCashFlowDto;
-        private PriceTargetConsensusDTO priceTargetConsensusDto;
-        private PriceTargetSummaryDTO priceTargetSummaryDto;
-
-        //we don't allow anyone to construct this object outside the actual cache implementors
-        protected RecordHolder(String ticker) {
-            this.ticker = ticker;
-        }
-
-        @NotNull
-        public String getTicker() {
-            return ticker;
-        }
-
-        @Nullable
-        public DiscountedCashFlowDTO getDiscountedCashFlowDto() {
-            return discountedCashFlowDto;
-        }
-
-
-        //we don't allow anyone to access setters outside the actual cache implementors
-        protected void setDiscountedCashFlowDto(DiscountedCashFlowDTO discountedCashFlowDto) {
-            this.discountedCashFlowDto = discountedCashFlowDto;
-        }
-
-        @Nullable
-        public PriceTargetConsensusDTO getPriceTargetConsensusDto() {
-            return priceTargetConsensusDto;
-        }
-
-        //we don't allow anyone to access setters outside the actual cache implementors
-        protected void setPriceTargetConsensusDto(PriceTargetConsensusDTO priceTargetConsensusDto) {
-            this.priceTargetConsensusDto = priceTargetConsensusDto;
-        }
-
-        @Nullable
-        public PriceTargetSummaryDTO getPriceTargetSummaryDto() {
-            return priceTargetSummaryDto;
-        }
-
-        //we don't allow anyone to access setters outside the actual cache implementors
-        protected void setPriceTargetSummaryDto(PriceTargetSummaryDTO priceTargetSummaryDto) {
-            this.priceTargetSummaryDto = priceTargetSummaryDto;
         }
     }
 }
