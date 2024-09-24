@@ -9,9 +9,9 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * This class is a variation of Least Frequently Used Cache implementation. I chose the LFU method because in I assume (!!!)
- * that in a prod setting the queried tickers would follow a kind of Pareto distribution, which means that 80% of the time
- * occasions people look for the 20% of the tickers.
+ * This class is a variation of Least Frequently Used Cache implementation. I chose the LFU method because I assume (!)
+ * that in a real-world setting the queried tickers would follow a kind of Pareto distribution, which means that 80% of the
+ * requests are coming for the top 20% of the tickers. After all, most people will look up valuations for S&P500 stocks.
  * <p>
  * In the default case of an LFU implementation, eviction happens in the put() method when the capacity is reached and
  * every get() method rebalances the frequencyCounter TreeMap, which is O(logN) time. I wanted to retain the logic of the

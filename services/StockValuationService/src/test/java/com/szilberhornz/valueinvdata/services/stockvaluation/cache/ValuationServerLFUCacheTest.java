@@ -1,6 +1,6 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.cache;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.record.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,12 +74,14 @@ class ValuationServerLFUCacheTest {
         cache.put(appleDcfDto.ticker(), appleDcfDto);
         cache.put(microsoftDcfDto.ticker(), microsoftDcfDto);
         cache.put(amazonDcfDto.ticker(), amazonDcfDto);
-        //get 2 tickers 44 times
+        //get 2 tickers 43 times
         for (int i = 0; i < 44; i++) {
             cache.get(appleDcfDto.ticker());
             cache.get(microsoftDcfDto.ticker());
         }
-        //get 1 ticker 1 time, amounting to 99 overall, but 100 is the threshold
+        //get Apple one more so AAPL and MSFT don't have the same call count
+        cache.get(appleDcfDto.ticker());
+        //get AMZN ticker 1 time
         cache.get(amazonDcfDto.ticker());
         //all three tickers will be present as the evictor didn't run
         assertEquals(appleDcfDto, cache.get(appleDcfDto.ticker()).getDiscountedCashFlowDto());
