@@ -7,9 +7,9 @@ import org.junitpioneer.jupiter.SetSystemProperty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class JVMBasedFMPAuthorizationTest {
+class JVMBasedFMPAuthorizerTest {
 
-    final FMPAuthorization sut = new JVMBasedFMPAuthorization();
+    final FMPAuthorizer sut = new JVMBasedFMPAuthorizer();
 
     @Test
     @ClearSystemProperty(key = "FMP_API_KEY")

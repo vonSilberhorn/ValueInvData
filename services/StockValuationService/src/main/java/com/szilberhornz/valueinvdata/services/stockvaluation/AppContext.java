@@ -1,5 +1,7 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation;
 
+import java.util.Set;
+
 /**
  * This class is a collection of static variables, some of which are coming from VMOptions.
  * I chose not to use any files to hold AppContext values because a) it's a small app,
@@ -18,6 +20,9 @@ public final class AppContext {
     public static final boolean USE_LFU_CACHE = Boolean.parseBoolean(System.getProperty("USE_LFU_CACHE"));
     public static final int LFU_CACHE_SIZE = LFU_CACHE_STRING == null ? DEFAULT_LFU_CACHE_SIZE : Integer.parseInt(LFU_CACHE_STRING);
     public static final int LFU_REBALANCE_THRESHOLD = LFU_REBALANCE_STRING == null ? DEFAULT_LFU_REBALANCE_THRESHOLD : Integer.parseInt(LFU_REBALANCE_STRING);
+
+    public static final Set<Integer> RETRYABLE_HTTP_STATUS_CODES = Set.of(408, 502, 503, 504);
+
 
     private AppContext() {
         //hide implicit public constructor. This class will only contain constants so no need to instantiate
