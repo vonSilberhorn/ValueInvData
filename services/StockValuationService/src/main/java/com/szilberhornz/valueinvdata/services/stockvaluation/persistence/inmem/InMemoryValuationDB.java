@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 
 public class InMemoryValuationDB implements ValuationDBRepository {
@@ -60,25 +62,46 @@ public class InMemoryValuationDB implements ValuationDBRepository {
         InMemoryValuationDB db = new InMemoryValuationDB(dataSource);
         //System.out.println(db.queryRecords("META"));
         final DiscountedCashFlowDTO dcfDTO = new DiscountedCashFlowDTO("MSN", "2023-09-24", 66.66, 77.77);
-        final RecordHolder recordHolder = RecordHolder.newRecordHolder("MSN", dcfDTO, null, null);
+        final PriceTargetSummaryDTO ptsDTO = new PriceTargetSummaryDTO("MSN", 5, 11.1, 5, 11.2);
+        final PriceTargetConsensusDTO ptcDTO = new PriceTargetConsensusDTO("MSN", 15, 10, 15,12);
+        final RecordHolder recordHolder = RecordHolder.newRecordHolder("MSN", dcfDTO, ptcDTO, ptsDTO);
         db.insertFullRecord(recordHolder);
         System.out.println(db.queryRecords("MSN").getDiscountedCashFlowDto());
     }
 
     @Override
-    public void insertFullRecord(RecordHolder recordHolder) {
-        final DiscountedCashFlowDTO dto = recordHolder.getDiscountedCashFlowDto();
-        final Connection conn;
-        try {
-            conn = this.dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        this.writeDiscountedCashFlowTable(conn, dto);
+    public void insertFullRecord(final RecordHolder recordHolder) {
+        //we can run these asynchronously using the ForkJoinPool as the backing Hikari pool has 5 db connections waiting to be used
+        LOG.info("Starting parallel execution of database writes...");
+        final long start = System.nanoTime();
+        CompletableFuture<Void> c1 = CompletableFuture.runAsync(()->this.writeDiscountedCashFlowTable(recordHolder.getDiscountedCashFlowDto()));
+        CompletableFuture<Void> c2 = CompletableFuture.runAsync(()->this.writePriceTargetSummaryTable(recordHolder.getPriceTargetSummaryDto()));
+        CompletableFuture<Void> c3 = CompletableFuture.runAsync(()->this.writePriceTargetConsensusTable(recordHolder.getPriceTargetConsensusDto()));
+        CompletableFuture<Void> c4 = CompletableFuture.allOf(c1, c2, c3);
+        this.awaitAndHandleParallelExecution(c4, start);
     }
 
-    private void writeDiscountedCashFlowTable(final Connection connection, final DiscountedCashFlowDTO dto){
-        try (final PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO_DCF)){
+    private void awaitAndHandleParallelExecution(final CompletableFuture<Void> waiterThread, final long start){
+        try {
+            final long end = System.nanoTime();
+            final long durationInMillis = Duration.ofNanos(end - start).toMillis();
+            waiterThread.get();
+            LOG.info("Parallel execution of database writes took {} milliseconds to run", durationInMillis);
+        } catch (final InterruptedException interruptedException){
+            LOG.error("The thread waiting for the parallel execution of database writes suddenly got interrupted!");
+            Thread.currentThread().interrupt();
+        } catch (final ExecutionException exception) {
+            LOG.error("The following exception happened when writing parallel to database tables: ", exception);
+        }
+    }
+
+    //todo create some objectToQueryMapper to reuse code
+    private void writeDiscountedCashFlowTable(final DiscountedCashFlowDTO dto){
+        if (dto == null){
+            LOG.warn("Cannot write to discounted cashflow table as the provided data is null!");
+            return;
+        }
+        try (final Connection conn = this.dataSource.getConnection(); final PreparedStatement preparedStatement = conn.prepareStatement(INSERT_INTO_DCF)){
             LOG.info("Writing discounted cashflow data on ticker {} to the database...", dto.ticker());
             final long start = System.nanoTime();
             preparedStatement.setString(1, dto.ticker());
@@ -94,8 +117,12 @@ public class InMemoryValuationDB implements ValuationDBRepository {
         }
     }
 
-    private void writePriceTargetSummaryTable(final Connection connection, final PriceTargetSummaryDTO dto){
-        try (final PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO_PTS)){
+    private void writePriceTargetSummaryTable(final PriceTargetSummaryDTO dto){
+        if (dto == null){
+            LOG.warn("Cannot write to target summary table as the provided data is null!");
+            return;
+        }
+        try (final Connection conn = this.dataSource.getConnection(); final PreparedStatement preparedStatement = conn.prepareStatement(INSERT_INTO_PTS)){
             LOG.info("Writing price target summary data on ticker {} to the database...", dto.ticker());
             final long start = System.nanoTime();
             preparedStatement.setString(1, dto.ticker());
@@ -112,8 +139,12 @@ public class InMemoryValuationDB implements ValuationDBRepository {
         }
     }
 
-    private void writePriceTargetConsensusTable(final Connection connection, final PriceTargetConsensusDTO dto){
-        try (final PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO_PTC)){
+    private void writePriceTargetConsensusTable(final PriceTargetConsensusDTO dto){
+        if (dto == null){
+            LOG.warn("Cannot write to target consensus table as the provided data is null!");
+            return;
+        }
+        try (final Connection conn = this.dataSource.getConnection(); final PreparedStatement preparedStatement = conn.prepareStatement(INSERT_INTO_PTC)){
             LOG.info("Writing price target consensus data on ticker {} to the database...", dto.ticker());
             final long start = System.nanoTime();
             preparedStatement.setString(1, dto.ticker());
