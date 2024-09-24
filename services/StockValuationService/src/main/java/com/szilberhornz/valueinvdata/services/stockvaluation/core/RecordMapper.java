@@ -35,7 +35,7 @@ public final class RecordMapper {
             return new PriceTargetConsensusDTO(object.getString("symbol"),
                     object.getDouble("targetHigh"), object.getDouble("targetLow"), object.getDouble("targetConsensus"), object.getDouble("targetMedian"));
         } catch (RuntimeException exception) {
-            LOG.error("Unexpected error happened while parsing HttpResponse to DcfDto. The response body is: {}", response.body(), exception);
+            LOG.error("Unexpected error happened while parsing HttpResponse to PtcDto. The response body is: {}", response.body(), exception);
             return null;
         }
     }
@@ -47,8 +47,12 @@ public final class RecordMapper {
             return new PriceTargetSummaryDTO(object.getString("symbol"),
                     object.getInt("lastMonth"), object.getDouble("lastMonthAvgPriceTarget"), object.getInt("lastQuarter"), object.getDouble("lastQuarterAvgPriceTarget"));
         } catch (RuntimeException exception) {
-            LOG.error("Unexpected error happened while parsing HttpResponse to DcfDto. The response body is: {}", response.body(), exception);
+            LOG.error("Unexpected error happened while parsing HttpResponse to PtsDto. The response body is: {}", response.body(), exception);
             return null;
         }
+    }
+
+    private RecordMapper() {
+        //static helper class, no need to instantiate
     }
 }

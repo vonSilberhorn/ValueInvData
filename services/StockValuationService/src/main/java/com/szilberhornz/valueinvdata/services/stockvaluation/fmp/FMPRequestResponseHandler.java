@@ -5,6 +5,8 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.core.RecordMapper;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InvalidApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -24,7 +26,7 @@ public class FMPRequestResponseHandler {
     }
 
     @Nullable
-    public DiscountedCashFlowDTO getDiscountedCashFlowReportFromFmpApi(final String ticker) throws RateLimitReachedException, NoApiKeyFoundException {
+    public DiscountedCashFlowDTO getDiscountedCashFlowReportFromFmpApi(final String ticker) throws RateLimitReachedException, ApiKeyException {
         final String logMsg = "discounted cashflow";
         final HttpResponse<String> response = this.handlePossibleRetry(()-> this.client.getDiscountedCashFlow(ticker), logMsg);
         if (response != null && response.statusCode() == 200){
@@ -36,7 +38,7 @@ public class FMPRequestResponseHandler {
     }
 
     @Nullable
-    public PriceTargetConsensusDTO getPriceTargetConsensusReportFromFmpApi(final String ticker) throws RateLimitReachedException, NoApiKeyFoundException {
+    public PriceTargetConsensusDTO getPriceTargetConsensusReportFromFmpApi(final String ticker) throws RateLimitReachedException, ApiKeyException {
         final String logMsg = "price target consensus";
         final HttpResponse<String> response = this.handlePossibleRetry(()-> this.client.getPriceTargetConsensus(ticker), logMsg);
         if (response != null && response.statusCode() == 200){
@@ -48,7 +50,7 @@ public class FMPRequestResponseHandler {
     }
 
     @Nullable
-    public PriceTargetSummaryDTO getPriceTargetSummaryReportFromFmpApi(final String ticker) throws RateLimitReachedException, NoApiKeyFoundException {
+    public PriceTargetSummaryDTO getPriceTargetSummaryReportFromFmpApi(final String ticker) throws RateLimitReachedException, ApiKeyException {
         final String logMsg = "price target summary";
         final HttpResponse<String> response = this.handlePossibleRetry(()-> this.client.getPriceTargetSummary(ticker), logMsg);
         if (response != null && response.statusCode() == 200){
@@ -59,11 +61,13 @@ public class FMPRequestResponseHandler {
         }
     }
 
-    private void handleError(final HttpResponse<String> httpResponse, final String logMsg) throws RateLimitReachedException {
+    private void handleError(final HttpResponse<String> httpResponse, final String logMsg) throws RateLimitReachedException, ApiKeyException {
         if (httpResponse == null) {
             LOG.error("Couldn't retrieve any response from FMP api for the {} api call, please look for possible reasons in earlier error logs", logMsg);
         } else if (httpResponse.statusCode() == 429) {
             throw new RateLimitReachedException("Daily rate limit reached for the supplied api key!");
+        } else if (httpResponse.statusCode() == 401) {
+            throw new InvalidApiKeyException(httpResponse.body());
         } else {
             LOG.error("FMP Api returned the following error response {} for the api call: {}", httpResponse, logMsg);
         }

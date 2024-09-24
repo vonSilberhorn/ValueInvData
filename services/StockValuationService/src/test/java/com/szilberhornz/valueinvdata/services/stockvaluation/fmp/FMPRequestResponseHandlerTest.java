@@ -3,6 +3,8 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.fmp;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InvalidApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -19,7 +21,7 @@ class FMPRequestResponseHandlerTest {
     private FMPRequestResponseHandler sut;
 
     @Test
-    void getDcfReportSuccessfully() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getDcfReportSuccessfully() throws ApiKeyException, RateLimitReachedException {
         final String validStringResponse = "[\n" +
                 "\t{\n" +
                 "\t\t\"symbol\": \"AAPL\",\n" +
@@ -40,7 +42,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getDcfReportSuccessfullyWithRetryAfterException() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getDcfReportSuccessfullyWithRetryAfterException() throws ApiKeyException, RateLimitReachedException {
         final String validStringResponse = "[\n" +
                 "\t{\n" +
                 "\t\t\"symbol\": \"AAPL\",\n" +
@@ -62,7 +64,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getDcfReportSuccessfullyWithRetryAfterRetryableStatusCode() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getDcfReportSuccessfullyWithRetryAfterRetryableStatusCode() throws ApiKeyException, RateLimitReachedException {
         final String validStringResponse = "[\n" +
                 "\t{\n" +
                 "\t\t\"symbol\": \"AAPL\",\n" +
@@ -86,7 +88,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void noApiKeyFoundExceptionShouldPropagate() throws NoApiKeyFoundException {
+    void noApiKeyFoundExceptionShouldPropagate() throws ApiKeyException {
         final NoApiKeyFoundException expectedException = new NoApiKeyFoundException("Test exception");
         when(this.clientMock.getDiscountedCashFlow("AAPL")).thenThrow(expectedException);
         this.sut = new FMPRequestResponseHandler(this.clientMock);
@@ -95,7 +97,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getDcfReportShouldFailAfterFailedRetry() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getDcfReportShouldFailAfterFailedRetry() throws ApiKeyException, RateLimitReachedException {
         final HttpResponse<String> retryableResponse = Mockito.mock(HttpResponse.class);
         when(retryableResponse.statusCode()).thenReturn(408).thenReturn(408);
         //return two retryable responses
@@ -106,7 +108,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getPtsReportShouldFailAfterFailedRetry() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getPtsReportShouldFailAfterFailedRetry() throws ApiKeyException, RateLimitReachedException {
         final HttpResponse<String> retryableResponse = Mockito.mock(HttpResponse.class);
         when(retryableResponse.statusCode()).thenReturn(408).thenReturn(408);
         //return two retryable responses
@@ -117,7 +119,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getDcfReportShouldThrwRateLimitReachedExceptionForHttp429() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getDcfReportShouldThrowRateLimitReachedExceptionForHttp429() throws ApiKeyException, RateLimitReachedException {
         final HttpResponse<String> tooManyRequestsResponse = Mockito.mock(HttpResponse.class);
         when(tooManyRequestsResponse.statusCode()).thenReturn(429);
         when(this.clientMock.getDiscountedCashFlow("AAPL")).thenReturn(tooManyRequestsResponse);
@@ -127,7 +129,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getPtcReportShouldFailAfterFailedRetry() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getPtcReportShouldFailAfterFailedRetry() throws ApiKeyException, RateLimitReachedException {
         //return two null responses
         when(this.clientMock.getDiscountedCashFlow("AAPL")).thenReturn(null).thenReturn(null);
         this.sut = new FMPRequestResponseHandler(this.clientMock);
@@ -136,7 +138,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getPtcReportSuccessfully() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getPtcReportSuccessfully() throws ApiKeyException, RateLimitReachedException {
         final String validStringResponse = "[\n" +
                 "\t{\n" +
                 "\t\t\"symbol\": \"AAPL\",\n" +
@@ -159,7 +161,7 @@ class FMPRequestResponseHandlerTest {
     }
 
     @Test
-    void getPtsReportSuccessfully() throws NoApiKeyFoundException, RateLimitReachedException {
+    void getPtsReportSuccessfully() throws ApiKeyException, RateLimitReachedException {
         final String validStringResponse = "[\n" +
                 "\t{\n" +
                 "\t\t\"symbol\": \"AAPL\",\n" +
@@ -184,5 +186,18 @@ class FMPRequestResponseHandlerTest {
         assertEquals(220.2, result.lastMonthAvgPriceTarget());
         assertEquals(11, result.lastQuarter());
         assertEquals(217.18, result.lastQuarterAvgPriceTarget());
+    }
+
+    @Test
+    void invalidApiKeyExceptionShouldBeThrown() throws ApiKeyException {
+        final String responseBodyString = "Invalid API KEY. Feel free to create a Free API Key or visit " +
+                "https://site.financialmodelingprep.com/faqs?search=why-is-my-api-key-invalid for more information.";
+        final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
+        when(response.body()).thenReturn(responseBodyString);
+        when(response.statusCode()).thenReturn(401);
+        when(this.clientMock.getPriceTargetConsensus("AAPL")).thenReturn(response);
+        this.sut = new FMPRequestResponseHandler(this.clientMock);
+        final Exception exception = assertThrows(InvalidApiKeyException.class, ()-> this.sut.getPriceTargetConsensusReportFromFmpApi("AAPL"));
+        assertEquals(responseBodyString, exception.getMessage());
     }
 }
