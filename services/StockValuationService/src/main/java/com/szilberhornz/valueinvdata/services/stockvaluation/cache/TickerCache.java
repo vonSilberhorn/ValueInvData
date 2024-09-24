@@ -28,8 +28,10 @@ public final class TickerCache {
         return TICKER_CACHE.contains(ticker.toUpperCase());
     }
 
+    //this currentThread() in the method should always be the [main] since initialization happens in the AppContainer, before
+    //the app starts the http server
     private void loadCache(){
-        try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceFileName)){
+        try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(this.resourceFileName)){
             if (in != null) {
                 final Scanner scanner = new Scanner(in, StandardCharsets.UTF_8).useDelimiter(",");
                 while (scanner.hasNext()) {
@@ -40,7 +42,7 @@ public final class TickerCache {
             } else {
                 throw new TickerCacheLoadingFailedException("Ticker cache loading failed because the resource file " + this.resourceFileName + " does not exist or is empty!");
             }
-        } catch (IOException ioe){
+        } catch (final IOException ioe){
             throw new TickerCacheLoadingFailedException("Ticker cache loading failed due to the following reason: ", ioe);
         }
     }
