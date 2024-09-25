@@ -4,6 +4,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -64,63 +65,81 @@ public final class RecordMapper {
     @Nullable
     public static RecordHolder newRecord(final ResultSet resultSet) throws SQLException {
         final int expectedSize = 14;
-        final List<Object> tempList = new ArrayList<>(expectedSize);
+        final List<Object> tempList = listFromResultSet(resultSet, expectedSize);
+        return tempList.isEmpty() ? null : constructRecord(tempList);
+    }
+
+    @Nullable
+    public static DiscountedCashFlowDTO newDcfDto(final ResultSet resultSet) throws SQLException {
+        final int expectedSize = 4;
+        final List<Object> tempList = listFromResultSet(resultSet, expectedSize);
+        return tempList.isEmpty() ? null : constructDiscountedCashFlowDTO(tempList);
+    }
+
+    @Nullable
+    public static PriceTargetConsensusDTO newPtcDto(final ResultSet resultSet) throws SQLException {
+        final int expectedSize = 5;
+        final List<Object> tempList = listFromResultSet(resultSet, expectedSize);
+        return tempList.isEmpty() ? null : constructPriceTargetConsensusDTO(tempList);
+    }
+
+    @Nullable
+    public static PriceTargetSummaryDTO newPtsDto(final ResultSet resultSet) throws SQLException {
+        final int expectedSize = 5;
+        final List<Object> tempList = listFromResultSet(resultSet, expectedSize);
+        return tempList.isEmpty() ? null : constructPriceTargetSummaryDTO(tempList);
+    }
+
+    @NotNull
+    private static List<Object> listFromResultSet(final ResultSet resultSet, final int expectedSize) throws SQLException {
+        final List<Object> result = new ArrayList<>(expectedSize);
         final ResultSetMetaData metaData = resultSet.getMetaData();
         final int columnCount = metaData.getColumnCount();
         while (resultSet.next()) {
             for (int i = 1; i <= columnCount; i++) {
-                tempList.add(resultSet.getObject(i));
+                result.add(resultSet.getObject(i));
             }
         }
-        if (tempList.size() > expectedSize) {
+        if (result.size() > expectedSize) {
             //this is to make sure we don't go full Jurassic Park and fail to notice that we have more items than we should!
             throw new IllegalStateException("The ResultSet unexpectedly held more than one row of data! This should " +
-                    "not have happened as the ticker is the primary key in the db tables and we only have 14 columns!");
+                    "not have happened as the ticker is the primary key in the db tables and we only have " + expectedSize + " columns!");
         }
-        if (tempList.isEmpty()){
-            return null;
-        } else {
-            return constructRecord(tempList);
-        }
+        return result;
     }
 
     @Nullable
     private static RecordHolder constructRecord(final List<Object> dataList) {
-        DiscountedCashFlowDTO dcfDto = null;
-        PriceTargetSummaryDTO ptsDto = null;
-        PriceTargetConsensusDTO ptcDto = null;
-        String ticker = null;
         final List<Object> dcfSublist = dataList.subList(0, 4);
-        final int dcfNullCount = (int) dcfSublist.stream().filter(Objects::isNull).count();
-        if (dcfNullCount == 0) {
-            ticker = (String) dcfSublist.getFirst();
-            dcfDto = new DiscountedCashFlowDTO(
-                    (String) dcfSublist.getFirst(),
-                    ((Date) dcfSublist.get(2)).toString(),
-                    ((BigDecimal) dcfSublist.get(1)).doubleValue(),
-                    ((BigDecimal) dcfSublist.getLast()).doubleValue()
-            );
-        }
+        final DiscountedCashFlowDTO dcfDto = constructDiscountedCashFlowDTO(dcfSublist);
         final List<Object> ptsSubList = dataList.subList(4, 9);
-        final int ptsNullCount = (int) ptsSubList.stream().filter(Objects::isNull).count();
-        if (ptsNullCount == 0) {
-            if (ticker == null) {
-                ticker = (String) ptsSubList.getFirst();
-            }
-            ptsDto = new PriceTargetSummaryDTO(
-                    (String) ptsSubList.getFirst(),
-                    (int) ptsSubList.get(1),
-                    ((BigDecimal) ptsSubList.get(2)).doubleValue(),
-                    (int) ptsSubList.get(3),
-                    ((BigDecimal) ptsSubList.getLast()).doubleValue()
-            );
-        }
+        final PriceTargetSummaryDTO ptsDto = constructPriceTargetSummaryDTO(ptsSubList);
         final List<Object> ptcSubList = dataList.subList(9, 14);
+        final PriceTargetConsensusDTO ptcDto = constructPriceTargetConsensusDTO(ptcSubList);
+        if (dcfDto == null && ptsDto == null && ptcDto == null){
+            return null;
+        } else {
+            final String ticker = getTicker(dcfDto, ptsDto, ptcDto);
+            return RecordHolder.newRecordHolder(ticker, dcfDto, ptcDto, ptsDto);
+        }
+    }
+
+    @NotNull
+    private static String getTicker(final DiscountedCashFlowDTO dcfDto, final PriceTargetSummaryDTO ptsDto, final PriceTargetConsensusDTO ptcDto) {
+        if (dcfDto != null) {
+            return dcfDto.ticker();
+        } else if (ptcDto != null){
+            return ptcDto.ticker();
+        } else {
+            return ptsDto.ticker();
+        }
+    }
+
+    @Nullable
+    private static PriceTargetConsensusDTO constructPriceTargetConsensusDTO(final List<Object> ptcSubList) {
         final int ptcNullCount = (int) ptcSubList.stream().filter(Objects::isNull).count();
+        PriceTargetConsensusDTO ptcDto = null;
         if (ptcNullCount == 0){
-            if (ticker == null) {
-                ticker = (String) ptcSubList.getFirst();
-            }
             ptcDto = new PriceTargetConsensusDTO(
                     (String) ptcSubList.getFirst(),
                     ((BigDecimal) ptcSubList.get(1)).doubleValue(),
@@ -129,11 +148,38 @@ public final class RecordMapper {
                     ((BigDecimal) ptcSubList.getLast()).doubleValue()
             );
         }
-        if (dcfDto == null && ptsDto == null && ptcDto == null){
-            return null;
-        } else {
-            return RecordHolder.newRecordHolder(ticker, dcfDto, ptcDto, ptsDto);
+        return ptcDto;
+    }
+
+    @Nullable
+    private static PriceTargetSummaryDTO constructPriceTargetSummaryDTO(final List<Object> ptsSubList) {
+        final int ptsNullCount = (int) ptsSubList.stream().filter(Objects::isNull).count();
+        PriceTargetSummaryDTO ptsDto = null;
+        if (ptsNullCount == 0) {
+            ptsDto = new PriceTargetSummaryDTO(
+                    (String) ptsSubList.getFirst(),
+                    (int) ptsSubList.get(1),
+                    ((BigDecimal) ptsSubList.get(2)).doubleValue(),
+                    (int) ptsSubList.get(3),
+                    ((BigDecimal) ptsSubList.getLast()).doubleValue()
+            );
         }
+        return ptsDto;
+    }
+
+    @Nullable
+    private static DiscountedCashFlowDTO constructDiscountedCashFlowDTO(final List<Object> dcfSublist) {
+        final int dcfNullCount = (int) dcfSublist.stream().filter(Objects::isNull).count();
+        DiscountedCashFlowDTO dcfDto = null;
+        if (dcfNullCount == 0) {
+            dcfDto = new DiscountedCashFlowDTO(
+                    (String) dcfSublist.getFirst(),
+                    ((Date) dcfSublist.get(2)).toString(),
+                    ((BigDecimal) dcfSublist.get(1)).doubleValue(),
+                    ((BigDecimal) dcfSublist.getLast()).doubleValue()
+            );
+        }
+        return dcfDto;
     }
 
     private RecordMapper() {
