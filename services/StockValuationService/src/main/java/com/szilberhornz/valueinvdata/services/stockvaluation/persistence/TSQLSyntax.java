@@ -18,6 +18,6 @@ public final class TSQLSyntax {
             "WHERE DiscountedCashFlowDb.ticker= ?";
 
     private TSQLSyntax(){
-        //no need to instantiate;
+        //no need to instantiate
     }
 }

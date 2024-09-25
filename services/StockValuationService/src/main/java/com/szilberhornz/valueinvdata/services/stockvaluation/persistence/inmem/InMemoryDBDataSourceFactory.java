@@ -67,13 +67,14 @@ public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
                 sqlStatementCount++;
                 final String sql = reader.readLine();
                 LOG.info("Executing initializer statement: {}", sql);
-                statement.execute(sql);
+                statement.addBatch(sql);
             }
             if (sqlStatementCount == 0) {
                 throw new InMemoryDBInitializationFailedException("In-memory DB initialization failed because the " +
                         "initializer file didn't have any sql statements in it!\n" +
                         "At least the 'create table' statements must be present for successful startup!");
             } else {
+                statement.executeBatch();
                 LOG.info("Finished the execution of {} initializer sql statements!", sqlStatementCount);
             }
         } else {
@@ -82,12 +83,10 @@ public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
     }
 
     private DataSource getHikariWrappedH2Instance() {
-        final org.h2.jdbcx.JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:ValuationDB;MODE=MSSQLServer;DB_CLOSE_DELAY=-1");
-        dataSource.setUser("sa");
-        dataSource.setPassword("sa");
+        final org.h2.jdbcx.JdbcDataSource h2DataSource = new JdbcDataSource();
+        h2DataSource.setURL("jdbc:h2:mem:ValuationDB;MODE=MSSQLServer;DB_CLOSE_DELAY=-1");
         final HikariConfig hikariConfig = this.createInMemConfigForHikari();
-        hikariConfig.setDataSource(dataSource);
+        hikariConfig.setDataSource(h2DataSource);
         return new HikariDataSource(hikariConfig);
     }
 
@@ -99,7 +98,7 @@ public final class InMemoryDBDataSourceFactory implements DataSourceFactory {
         hikariConfig.setMinimumIdle(5);
         hikariConfig.setPoolName("InMemoryH2DBHikariPool");
         //idle connection health checks every 2 minutes
-        final long twoMinutesInMillis = 2 * 60 * 1000;
+        final long twoMinutesInMillis = (long) 2 * 60 * 1000;
         hikariConfig.setKeepaliveTime(twoMinutesInMillis);
         return hikariConfig;
     }

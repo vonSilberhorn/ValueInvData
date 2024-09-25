@@ -225,8 +225,8 @@ public final class ValuationDBRepositoryImpl implements ValuationDBRepository {
             if (RETRYABLE_SQL_ERRORS.contains(sqlException.getErrorCode())) {
                 return true;
             }
-            if (sqlException.getCause() != null && sqlException.getCause() instanceof SQLException) {
-                return this.isRetryable((SQLException) sqlException.getCause());
+            if (sqlException.getCause() instanceof final SQLException cause) {
+                return this.isRetryable(cause);
             }
             return false;
         }
