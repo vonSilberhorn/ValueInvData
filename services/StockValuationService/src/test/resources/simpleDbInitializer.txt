@@ -1,0 +1,1 @@
+CREATE TABLE DiscountedCashFlowDb (Ticker VARCHAR (255) PRIMARY KEY, Dcf DECIMAL (12, 2), Date DATE, StockPrice DECIMAL (12, 2))

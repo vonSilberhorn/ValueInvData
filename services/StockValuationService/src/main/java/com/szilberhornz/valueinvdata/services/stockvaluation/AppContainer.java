@@ -15,7 +15,7 @@ public final class AppContainer {
 
     private static final Logger LOG = LoggerFactory.getLogger(AppContainer.class);
 
-    final ValuationServerCache cache = initializeCache();
+    final ValuationServerCache cache = this.initializeCache();
 
     private ValuationServerCache initializeCache() {
         if (AppContext.IS_DEMO_MODE && !AppContext.USE_LFU_CACHE) {

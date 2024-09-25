@@ -1,0 +1,1 @@
+INSERT INTO PriceTargetSummaryDb VALUES ('AAPL', 5, 220.2, 11, 217.18)
