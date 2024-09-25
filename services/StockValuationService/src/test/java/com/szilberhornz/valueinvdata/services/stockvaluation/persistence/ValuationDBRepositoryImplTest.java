@@ -211,4 +211,76 @@ class ValuationDBRepositoryImplTest {
         repo.insertFullRecord(recordHolder);
         verify(stmtMock, times(1)).executeUpdate();
     }
+
+    @Test
+    void insertionFailureShouldRetryOnceWithPts() throws SQLException {
+        final DataSource mockDataSource = Mockito.mock(DataSource.class);
+        final SQLException retryableException = new SQLException("testException", "bad" , 1205, new SQLException());
+        final SQLException nestedRetryableException = new SQLException(retryableException);
+        final Connection connectionMock = Mockito.mock(Connection.class);
+        final PreparedStatement stmtMock = Mockito.mock(PreparedStatement.class);
+        //throw two retryables
+        when(stmtMock.executeUpdate()).thenThrow(nestedRetryableException).thenThrow(retryableException);
+        when(connectionMock.prepareStatement(any())).thenReturn(stmtMock).thenReturn(stmtMock);
+        when(mockDataSource.getConnection()).thenReturn(connectionMock).thenReturn(connectionMock);
+        //we only insert dcfDTo so the PreparedStatement mock should only be called 2 times if there is a retry
+        final PriceTargetSummaryDTO ptsDTO = new PriceTargetSummaryDTO("DUMMY", 5, 11.1, 5, 11.2);
+        final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY2", null, null, ptsDTO);
+        final ValuationDBRepository repo = new ValuationDBRepositoryImpl(mockDataSource);
+        repo.insertFullRecord(recordHolder);
+        verify(stmtMock, times(2)).executeUpdate();
+    }
+
+    @Test
+    void insertionFailureShouldNotRetryWithPts() throws SQLException {
+        final DataSource mockDataSource = Mockito.mock(DataSource.class);
+        final SQLException nonRetryableException = new SQLException("testException");
+        final Connection connectionMock = Mockito.mock(Connection.class);
+        final PreparedStatement stmtMock = Mockito.mock(PreparedStatement.class);
+        when(stmtMock.executeUpdate()).thenThrow(nonRetryableException).thenReturn(1);
+        when(connectionMock.prepareStatement(any())).thenReturn(stmtMock).thenReturn(stmtMock);
+        when(mockDataSource.getConnection()).thenReturn(connectionMock).thenReturn(connectionMock);
+        //we only insert dcfDTo so the PreparedStatement mock should only be called 1 times if there is no retry
+        final PriceTargetSummaryDTO ptsDTO = new PriceTargetSummaryDTO("DUMMY2", 5, 11.1, 5, 11.2);
+        final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY2", null, null, ptsDTO);
+        final ValuationDBRepository repo = new ValuationDBRepositoryImpl(mockDataSource);
+        repo.insertFullRecord(recordHolder);
+        verify(stmtMock, times(1)).executeUpdate();
+    }
+
+    @Test
+    void insertionFailureShouldRetryOnceWithPtc() throws SQLException {
+        final DataSource mockDataSource = Mockito.mock(DataSource.class);
+        final SQLException retryableException = new SQLException("testException", "bad" , 1205, new SQLException());
+        final SQLException nestedRetryableException = new SQLException(retryableException);
+        final Connection connectionMock = Mockito.mock(Connection.class);
+        final PreparedStatement stmtMock = Mockito.mock(PreparedStatement.class);
+        //throw two retryables
+        when(stmtMock.executeUpdate()).thenThrow(nestedRetryableException).thenThrow(retryableException);
+        when(connectionMock.prepareStatement(any())).thenReturn(stmtMock).thenReturn(stmtMock);
+        when(mockDataSource.getConnection()).thenReturn(connectionMock).thenReturn(connectionMock);
+        //we only insert dcfDTo so the PreparedStatement mock should only be called 2 times if there is a retry
+        final PriceTargetConsensusDTO ptcDTO = new PriceTargetConsensusDTO("DUMMY", 15, 10, 15,12);
+        final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY2", null, ptcDTO, null);
+        final ValuationDBRepository repo = new ValuationDBRepositoryImpl(mockDataSource);
+        repo.insertFullRecord(recordHolder);
+        verify(stmtMock, times(2)).executeUpdate();
+    }
+
+    @Test
+    void insertionFailureShouldNotRetryWithPtc() throws SQLException {
+        final DataSource mockDataSource = Mockito.mock(DataSource.class);
+        final SQLException nonRetryableException = new SQLException("testException");
+        final Connection connectionMock = Mockito.mock(Connection.class);
+        final PreparedStatement stmtMock = Mockito.mock(PreparedStatement.class);
+        when(stmtMock.executeUpdate()).thenThrow(nonRetryableException).thenReturn(1);
+        when(connectionMock.prepareStatement(any())).thenReturn(stmtMock).thenReturn(stmtMock);
+        when(mockDataSource.getConnection()).thenReturn(connectionMock).thenReturn(connectionMock);
+        //we only insert dcfDTo so the PreparedStatement mock should only be called 1 times if there is no retry
+        final PriceTargetConsensusDTO ptcDTO = new PriceTargetConsensusDTO("DUMMY", 15, 10, 15,12);
+        final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY2", null, ptcDTO, null);
+        final ValuationDBRepository repo = new ValuationDBRepositoryImpl(mockDataSource);
+        repo.insertFullRecord(recordHolder);
+        verify(stmtMock, times(1)).executeUpdate();
+    }
 }
