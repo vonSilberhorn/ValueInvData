@@ -23,6 +23,7 @@ public final class AppContext {
 
     public static final Set<Integer> RETRYABLE_HTTP_STATUS_CODES = Set.of(408, 502, 503, 504);
 
+    public static final String MSSQL_ADDRESS = System.getProperty("MSSQL_ADDRESS");
 
     private AppContext() {
         //hide implicit public constructor. This class will only contain constants so no need to instantiate

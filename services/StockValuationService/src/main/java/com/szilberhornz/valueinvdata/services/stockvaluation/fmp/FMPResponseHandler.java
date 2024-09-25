@@ -6,6 +6,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.Discoun
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InsufficientPrivilegesException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InvalidApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
 import org.jetbrains.annotations.Nullable;
@@ -15,13 +16,13 @@ import org.slf4j.LoggerFactory;
 import java.net.http.HttpResponse;
 import java.util.concurrent.Callable;
 
-public class FMPRequestResponseHandler {
+public class FMPResponseHandler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FMPRequestResponseHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FMPResponseHandler.class);
 
     final FMPApiHttpClient client;
 
-    public FMPRequestResponseHandler(final FMPApiHttpClient client) {
+    public FMPResponseHandler(final FMPApiHttpClient client) {
         this.client = client;
     }
 
@@ -68,6 +69,8 @@ public class FMPRequestResponseHandler {
             throw new RateLimitReachedException("Daily rate limit reached for the supplied api key!");
         } else if (httpResponse.statusCode() == 401) {
             throw new InvalidApiKeyException(httpResponse.body());
+        } else if (httpResponse.statusCode() == 403) {
+            throw new InsufficientPrivilegesException(httpResponse.body());
         } else {
             LOG.error("FMP Api returned the following error response {} for the api call: {}", httpResponse, logMsg);
         }
