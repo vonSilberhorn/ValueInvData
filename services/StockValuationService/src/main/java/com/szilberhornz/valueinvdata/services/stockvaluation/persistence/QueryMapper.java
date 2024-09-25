@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 import static com.szilberhornz.valueinvdata.services.stockvaluation.persistence.TSQLSyntax.*;
 
-public final class StatementDecorator {
+public final class QueryMapper {
 
     public static PreparedStatement prepareDiscountedCashFlowInsert(final Connection connection, final DiscountedCashFlowDTO dto) throws SQLException {
         final PreparedStatement preparedStatement = connection.prepareStatement(INSERT_INTO_DCF);
@@ -65,7 +65,7 @@ public final class StatementDecorator {
         return preparedStatement;
     }
 
-    private StatementDecorator(){
+    private QueryMapper(){
         //no need to instantiate
     }
 }
