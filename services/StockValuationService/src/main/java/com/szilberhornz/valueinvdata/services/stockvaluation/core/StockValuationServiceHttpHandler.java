@@ -25,7 +25,6 @@ public class StockValuationServiceHttpHandler implements HttpHandler {
 
     @Override
     public void handle(final HttpExchange exchange) throws IOException {
-        LOG.info("Received http request {} {}", exchange.getRequestMethod(), exchange.getRequestURI());
         if (!exchange.getRequestMethod().equalsIgnoreCase("GET")
                 || !exchange.getRequestURI().getPath().equalsIgnoreCase("/valuation-report")
                 || !exchange.getRequestURI().getQuery().startsWith("ticker=")){
