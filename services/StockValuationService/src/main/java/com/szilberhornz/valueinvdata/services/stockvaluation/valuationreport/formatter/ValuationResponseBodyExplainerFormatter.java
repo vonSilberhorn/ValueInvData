@@ -5,7 +5,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
 public class ValuationResponseBodyExplainerFormatter implements ValuationResponseBodyFormatter {
 
     @Override
-    public String getFormattedResponseBody(final RecordHolder recordHolder) {
+    public String getFormattedResponseBody(final RecordHolder recordHolder, final String errorMessage) {
         return "";
     }
 }

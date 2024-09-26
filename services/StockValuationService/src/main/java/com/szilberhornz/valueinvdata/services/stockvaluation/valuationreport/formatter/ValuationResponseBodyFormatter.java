@@ -4,5 +4,5 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
 
 public interface ValuationResponseBodyFormatter {
 
-    String getFormattedResponseBody(RecordHolder recordHolder);
+    String getFormattedResponseBody(RecordHolder recordHolder, String errorString);
 }

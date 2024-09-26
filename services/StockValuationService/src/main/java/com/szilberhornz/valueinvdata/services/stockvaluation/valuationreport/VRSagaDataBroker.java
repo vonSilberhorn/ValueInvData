@@ -61,7 +61,7 @@ public class VRSagaDataBroker {
 
 
     @NotNull
-    public RecordHolder getDataFromFmpApi(@Nullable final RecordHolder recordFromDb, final String ticker, final long timeOutInSeconds) throws Throwable {
+    public RecordHolder getDataFromFmpApi(@Nullable final RecordHolder recordFromDb, final String ticker, final long timeOutInMillis) throws Throwable {
         DiscountedCashFlowDTO dcfDto = null;
         PriceTargetSummaryDTO ptsDto = null;
         PriceTargetConsensusDTO ptcDto = null;
@@ -85,9 +85,9 @@ public class VRSagaDataBroker {
         }
         try {
             //but we have to block before returning to scrape all the missing data we can
-            dcfDto = dcfDto == null ? dcfDtoFuture.get(timeOutInSeconds, TimeUnit.MILLISECONDS) : dcfDto;
-            ptsDto = ptsDto == null ? ptsDtoFuture.get(timeOutInSeconds, TimeUnit.MILLISECONDS) : ptsDto;
-            ptcDto = ptcDto == null ? ptcDtoFuture.get(timeOutInSeconds, TimeUnit.MILLISECONDS) : ptcDto;
+            dcfDto = dcfDto == null ? dcfDtoFuture.get(timeOutInMillis, TimeUnit.MILLISECONDS) : dcfDto;
+            ptsDto = ptsDto == null ? ptsDtoFuture.get(timeOutInMillis, TimeUnit.MILLISECONDS) : ptsDto;
+            ptcDto = ptcDto == null ? ptcDtoFuture.get(timeOutInMillis, TimeUnit.MILLISECONDS) : ptcDto;
         } catch (final InterruptedException interruptedException) {
             LOG.error("Unexpected interruption while getting data from the FMP api for ticker {}!", ticker, interruptedException);
             Thread.currentThread().interrupt();
@@ -107,10 +107,9 @@ public class VRSagaDataBroker {
             final DiscountedCashFlowDTO dcfDto = recordFromFmpApi.getDiscountedCashFlowDto();
             final PriceTargetConsensusDTO ptcDto = recordFromFmpApi.getPriceTargetConsensusDto();
             final PriceTargetSummaryDTO ptsDto = recordFromFmpApi.getPriceTargetSummaryDto();
-            final RecordHolder temp = RecordHolder.newRecordHolder(ticker, dcfDto, ptcDto, ptsDto);
             if (recordFromDb == null || recordFromDb.isDataMissing()) {
                 LOG.info("Writing {} ticker data to the database!", ticker);
-                this.valuationDbRepository.insertFullRecord(temp);
+                this.valuationDbRepository.insertFullRecord(recordFromFmpApi);
             }
             if (recordFromCache == null){
                 LOG.info("Adding full {} ticker data to the cache!", ticker);

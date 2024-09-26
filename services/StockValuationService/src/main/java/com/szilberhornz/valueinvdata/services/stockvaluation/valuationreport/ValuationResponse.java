@@ -22,7 +22,7 @@ public class ValuationResponse implements StockValuationServiceResponse {
     @Override
     @Nullable
     public String getMessageBody() {
-        return this.responseBodyFormatter.getFormattedResponseBody(this.recordHolder);
+        return this.responseBodyFormatter.getFormattedResponseBody(this.recordHolder, this.errorMessage);
     }
 
     @Override

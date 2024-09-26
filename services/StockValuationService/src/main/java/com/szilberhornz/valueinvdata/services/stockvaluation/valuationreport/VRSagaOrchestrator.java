@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +36,23 @@ public class VRSagaOrchestrator {
         this.dataBroker = dataBroker;
     }
 
+    public ValuationResponse getValuationResponse(final String ticker){
+        try {
+            final CompletableFuture<ValuationResponse> responseFuture = CompletableFuture.supplyAsync(()->this.generateValueReport(ticker.toUpperCase(Locale.ROOT)));
+            return responseFuture.get(this.circuitBreaker.getOverallTimeoutInMillis(), TimeUnit.MILLISECONDS);
+        } catch (final InterruptedException interruptedException) {
+            LOG.error("Unexpected interruption while generating report for ticker {}", ticker, interruptedException);
+            Thread.currentThread().interrupt();
+            return this.returnInternalError(ticker);
+        } catch (final TimeoutException timeoutException) {
+            LOG.error("Circuit breaker timeout while generating report for ticker {}", ticker, timeoutException);
+            return this.returnInternalError(ticker);
+        } catch (final Throwable throwable) {
+            LOG.error("Unexpected exception while generating report for ticker {}", ticker, throwable);
+            return this.returnInternalError(ticker);
+        }
+    }
+
     private ValuationResponse generateValueReport(final String upperCaseTicker) {
         if (!this.tickerCache.tickerExists(upperCaseTicker)) {
             LOG.warn("Received illegal request for invalid ticker {}! Sending back http 403", upperCaseTicker);
@@ -50,14 +68,16 @@ public class VRSagaOrchestrator {
                 final CompletableFuture<RecordHolder> rhFuture = CompletableFuture.supplyAsync(() -> this.dataBroker.getDataFromDb(recordFromCache, upperCaseTicker));
                 //wait till timeout or success, we go to the FMP Api only if we are still missing data
                 recordFromDb = rhFuture.get(this.circuitBreaker.getTimeoutForDbQueryInMillis(), TimeUnit.MILLISECONDS);
-            } catch (final IllegalStateException illegalStateException) {
-                //we must break here since we should not return data that we know is inconsistent or otherwise wrong
-                return this.handleDbError(upperCaseTicker, illegalStateException);
             } catch (final ExecutionException executionException) {
-                //log and move on, the expected IllegalStateException is already handled
+                if (executionException.getCause() instanceof final IllegalStateException ise) {
+                    //we must break here since we should not return data that we know is inconsistent or otherwise wrong
+                    return this.handleDbError(upperCaseTicker, ise);
+                }
+                //else log and move on, the expected IllegalStateException is already handled
                 LOG.error("Unexpected exception happened while trying to get data for ticker {} from the database!", upperCaseTicker, executionException.getCause());
             } catch (final InterruptedException interruptedException) {
                 LOG.error("Unexpected thread interruption while trying to get data for ticker {} from the database!", upperCaseTicker, interruptedException);
+                Thread.currentThread().interrupt();
             } catch (final TimeoutException timeoutException) {
                 //log but otherwise do nothing, we go to the FMP Api
                 LOG.error("Circuit breaker timeout reached while trying to get data for ticker {} from the database!", upperCaseTicker);
@@ -81,7 +101,7 @@ public class VRSagaOrchestrator {
                         .build();
             } catch (final Throwable throwable) {
                 //we handle error and return what we can (that is what we have from the db which is equals or a superset of what we have from the cache)
-                finalResponse = this.handleFmpApiError(recordFromDb, throwable);
+                finalResponse = this.handleFmpApiError(recordFromDb, throwable, upperCaseTicker);
             }
         } else {
             finalResponse = new ValuationResponse.Builder()
@@ -110,14 +130,18 @@ public class VRSagaOrchestrator {
     @NotNull
     private ValuationResponse handleDbError(final String ticker, final Exception illegalStateException) {
         LOG.error("Querying the database encountered a fatal data consistency issue for ticker {}! Returning http 500 as a response!", ticker, illegalStateException);
+        return this.returnInternalError(ticker);
+    }
+
+    private ValuationResponse returnInternalError(final String ticker){
         return new ValuationResponse.Builder()
                 .statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
-                .errorMessage("The server encountered an unexpected internal error when trying to generate report for ticker {}!")
+                .errorMessage("The server encountered an unexpected internal error when trying to generate report for ticker " + ticker + "!")
                 .build();
     }
 
     @NotNull
-    private ValuationResponse handleFmpApiError(final RecordHolder recordHolder, final Throwable throwable) {
+    private ValuationResponse handleFmpApiError(final RecordHolder recordHolder, final Throwable throwable, final String ticker) {
         final boolean noRecord = recordHolder == null;
         if (throwable instanceof final ApiKeyException ex) {
             return this.translateExceptedExceptions(noRecord, recordHolder, HttpStatusCode.UNAUTHORIZED.getStatusCode(), ex);
@@ -125,12 +149,9 @@ public class VRSagaOrchestrator {
             return this.translateExceptedExceptions(noRecord, recordHolder, HttpStatusCode.TOO_MANY_REQUESTS.getStatusCode(), rre);
         } else if (noRecord) {
             LOG.error("Encountered unexpected exception while getting data from FMP Api!", throwable);
-            return new ValuationResponse.Builder()
-                    .statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
-                    .errorMessage("Internal server error, please try again later!")
-                    .build();
+            return this.returnInternalError(ticker);
         } else {
-            //LOG for internal use but return the partial data we have
+            //LOG for internal use but return the partial data we have, and doesn't leak unknown errors
             LOG.error("Encountered unexpected exception while getting data from FMP Api!", throwable);
             return new ValuationResponse.Builder()
                     .recordHolder(recordHolder)
