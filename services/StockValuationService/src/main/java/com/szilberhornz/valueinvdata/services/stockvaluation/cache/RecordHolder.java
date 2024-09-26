@@ -33,6 +33,12 @@ public class RecordHolder {
         return new RecordHolder(ticker, dcfDto, ptcDto, ptsDto);
     }
 
+    public boolean isDataMissing(){
+        return this.discountedCashFlowDto == null
+                || this.priceTargetSummaryDto == null
+                || this.priceTargetConsensusDto == null;
+    }
+
     //we don't allow anyone to construct this object outside the actual cache implementors
     RecordHolder(final String ticker) {
         this.ticker = ticker;

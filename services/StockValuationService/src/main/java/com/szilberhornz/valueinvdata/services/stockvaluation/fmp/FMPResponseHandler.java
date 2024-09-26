@@ -1,11 +1,11 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.fmp;
 
 import com.szilberhornz.valueinvdata.services.stockvaluation.AppContext;
+import com.szilberhornz.valueinvdata.services.stockvaluation.core.HttpStatusCode;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.RecordMapper;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InsufficientPrivilegesException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InvalidApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
@@ -27,10 +27,10 @@ public class FMPResponseHandler {
     }
 
     @Nullable
-    public DiscountedCashFlowDTO getDiscountedCashFlowReportFromFmpApi(final String ticker) throws RateLimitReachedException, ApiKeyException {
+    public DiscountedCashFlowDTO getDiscountedCashFlowReportFromFmpApi(final String ticker) {
         final String logMsg = "discounted cashflow";
         final HttpResponse<String> response = this.handlePossibleRetry(()-> this.client.getDiscountedCashFlow(ticker), logMsg);
-        if (response != null && response.statusCode() == 200){
+        if (response != null && response.statusCode() == HttpStatusCode.OK.getStatusCode()){
             return RecordMapper.newDcfDto(response);
         } else {
             this.handleError(response, logMsg);
@@ -39,10 +39,10 @@ public class FMPResponseHandler {
     }
 
     @Nullable
-    public PriceTargetConsensusDTO getPriceTargetConsensusReportFromFmpApi(final String ticker) throws RateLimitReachedException, ApiKeyException {
+    public PriceTargetConsensusDTO getPriceTargetConsensusReportFromFmpApi(final String ticker) {
         final String logMsg = "price target consensus";
         final HttpResponse<String> response = this.handlePossibleRetry(()-> this.client.getPriceTargetConsensus(ticker), logMsg);
-        if (response != null && response.statusCode() == 200){
+        if (response != null && response.statusCode() == HttpStatusCode.OK.getStatusCode()){
             return RecordMapper.newPtcDto(response);
         } else {
             this.handleError(response, logMsg);
@@ -51,10 +51,10 @@ public class FMPResponseHandler {
     }
 
     @Nullable
-    public PriceTargetSummaryDTO getPriceTargetSummaryReportFromFmpApi(final String ticker) throws RateLimitReachedException, ApiKeyException {
+    public PriceTargetSummaryDTO getPriceTargetSummaryReportFromFmpApi(final String ticker) {
         final String logMsg = "price target summary";
         final HttpResponse<String> response = this.handlePossibleRetry(()-> this.client.getPriceTargetSummary(ticker), logMsg);
-        if (response != null && response.statusCode() == 200){
+        if (response != null && response.statusCode() == HttpStatusCode.OK.getStatusCode()){
             return RecordMapper.newPtsDto(response);
         } else {
             this.handleError(response, logMsg);
@@ -62,14 +62,14 @@ public class FMPResponseHandler {
         }
     }
 
-    private void handleError(final HttpResponse<String> httpResponse, final String logMsg) throws RateLimitReachedException, ApiKeyException {
+    private void handleError(final HttpResponse<String> httpResponse, final String logMsg) {
         if (httpResponse == null) {
             LOG.error("Couldn't retrieve any response from FMP api for the {} api call, please look for possible reasons in earlier error logs", logMsg);
-        } else if (httpResponse.statusCode() == 429) {
+        } else if (httpResponse.statusCode() == HttpStatusCode.TOO_MANY_REQUESTS.getStatusCode()) {
             throw new RateLimitReachedException("Daily rate limit reached for the supplied api key!");
-        } else if (httpResponse.statusCode() == 401) {
+        } else if (httpResponse.statusCode() == HttpStatusCode.UNAUTHORIZED.getStatusCode()) {
             throw new InvalidApiKeyException(httpResponse.body());
-        } else if (httpResponse.statusCode() == 403) {
+        } else if (httpResponse.statusCode() == HttpStatusCode.FORBIDDEN.getStatusCode()) {
             throw new InsufficientPrivilegesException(httpResponse.body());
         } else {
             LOG.error("FMP Api returned the following error response {} for the api call: {}", httpResponse, logMsg);
@@ -77,7 +77,7 @@ public class FMPResponseHandler {
     }
 
     @Nullable
-    private HttpResponse<String> handlePossibleRetry(final Callable<HttpResponse<String>> callable, final String logMsg) throws NoApiKeyFoundException {
+    private HttpResponse<String> handlePossibleRetry(final Callable<HttpResponse<String>> callable, final String logMsg) {
         //try api call for the first time
         HttpResponse<String> response = this.tryApiCall(callable, logMsg);
         //try again if needed, but only once
@@ -94,7 +94,7 @@ public class FMPResponseHandler {
 
     //we want to propagate the NoApiKeyFoundException so we can return 401 to the caller
     @Nullable
-    private HttpResponse<String> tryApiCall(final Callable<HttpResponse<String>> callable, final String logMsg) throws NoApiKeyFoundException {
+    private HttpResponse<String> tryApiCall(final Callable<HttpResponse<String>> callable, final String logMsg) {
         try {
             return callable.call();
         } catch (final NoApiKeyFoundException noApiKeyFoundException) {
