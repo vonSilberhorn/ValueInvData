@@ -82,6 +82,7 @@ public class VRSagaDataBroker {
         if (ptcDto == null){
             ptcDtoFuture = CompletableFuture.supplyAsync(()->this.fmpResponseHandler.getPriceTargetConsensusReportFromFmpApi(ticker));
         }
+        //todo this is not good, with not paid api key 2 of them will throw exceptions which prevent data to be return
         try {
             //but we have to block before returning to scrape all the missing data we can
             dcfDto = dcfDto == null ? dcfDtoFuture.completeOnTimeout(null, timeOutInMillis, TimeUnit.MILLISECONDS).get() : dcfDto;
@@ -90,6 +91,9 @@ public class VRSagaDataBroker {
         } catch (final InterruptedException interruptedException) {
             LOG.error("Unexpected interruption while getting data from the FMP api for ticker {}!", ticker, interruptedException);
             Thread.currentThread().interrupt();
+            //todo this is the bad part, we would have to simultaneously retain the exception and send back data
+            // which is impossible. But maybe we can create a Response here after handling the errors. But then we cannot
+            // persist the data from the API because we can't get it from the Response. Oh shit!!!11!!
         } catch (final ExecutionException executionException) {
             //we must throw the cause of the execution exception because it may be api key issue
             throw executionException.getCause();
@@ -100,6 +104,7 @@ public class VRSagaDataBroker {
 
     public void persistData(final String ticker, final RecordHolder recordFromCache, final RecordHolder recordFromDb, final RecordHolder recordFromFmpApi) {
         //the api data is a superset of the others
+        //todo write data from the dbresponse to the cache too
         if (recordFromFmpApi != null) {
             final DiscountedCashFlowDTO dcfDto = recordFromFmpApi.getDiscountedCashFlowDto();
             final PriceTargetConsensusDTO ptcDto = recordFromFmpApi.getPriceTargetConsensusDto();
@@ -108,24 +113,36 @@ public class VRSagaDataBroker {
                 LOG.info("Writing {} ticker data to the database!", ticker);
                 this.valuationDbRepository.insertFullRecord(recordFromFmpApi);
             }
-            if (recordFromCache == null){
-                LOG.info("Adding full {} ticker data to the cache!", ticker);
+            this.addToCache(recordFromCache, ticker, dcfDto, ptsDto ,ptcDto);
+
+            //write records from db to cache
+        } else if (recordFromDb != null) {
+            final DiscountedCashFlowDTO dcfDto = recordFromDb.getDiscountedCashFlowDto();
+            final PriceTargetConsensusDTO ptcDto = recordFromDb.getPriceTargetConsensusDto();
+            final PriceTargetSummaryDTO ptsDto = recordFromDb.getPriceTargetSummaryDto();
+            this.addToCache(recordFromCache, ticker, dcfDto, ptsDto, ptcDto);
+        }
+    }
+
+    private void addToCache(final RecordHolder recordFromCache, final String ticker, final DiscountedCashFlowDTO dcfDto,
+                            final PriceTargetSummaryDTO ptsDto, final PriceTargetConsensusDTO ptcDto){
+        if (recordFromCache == null){
+            LOG.info("Adding full {} ticker data to the cache!", ticker);
+            this.valuationServerCache.put(ticker, dcfDto);
+            this.valuationServerCache.put(ticker, ptcDto);
+            this.valuationServerCache.put(ticker, ptsDto);
+        } else if (recordFromCache.isDataMissing()){
+            if (recordFromCache.getDiscountedCashFlowDto() == null) {
+                LOG.info("Adding discounted cashflow {} ticker data to the cache!", ticker);
                 this.valuationServerCache.put(ticker, dcfDto);
+            }
+            if (recordFromCache.getPriceTargetConsensusDto() == null) {
+                LOG.info("Adding price target consensus {} ticker data to the cache!", ticker);
                 this.valuationServerCache.put(ticker, ptcDto);
+            }
+            if (recordFromCache.getPriceTargetSummaryDto() == null) {
+                LOG.info("Adding price target summary {} ticker data to the cache!", ticker);
                 this.valuationServerCache.put(ticker, ptsDto);
-            } else if (recordFromCache.isDataMissing()){
-                if (recordFromCache.getDiscountedCashFlowDto() == null) {
-                    LOG.info("Adding discounted cashflow {} ticker data to the cache!", ticker);
-                    this.valuationServerCache.put(ticker, dcfDto);
-                }
-                if (recordFromCache.getPriceTargetConsensusDto() == null) {
-                    LOG.info("Adding price target consensus {} ticker data to the cache!", ticker);
-                    this.valuationServerCache.put(ticker, ptcDto);
-                }
-                if (recordFromCache.getPriceTargetSummaryDto() == null) {
-                    LOG.info("Adding price target summary {} ticker data to the cache!", ticker);
-                    this.valuationServerCache.put(ticker, ptsDto);
-                }
             }
         }
     }

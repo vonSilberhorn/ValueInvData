@@ -6,9 +6,12 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.ci
  */
 public class VRSagaDefaultCircuitBreaker implements VRSagaCircuitBreaker {
 
-    private static final long DEFAULT_TIMEOUT_FOR_API_CALL_IN_MILLIS = 2500;
-    private static final long DEFAULT_TIMEOUT_FOR_DB_QUERY_IN_MILLIS = 2000;
-    private static final long DEFAULT_OVERALL_TIMEOUT_IN_MILLIS = 5000;
+    //private static final long DEFAULT_TIMEOUT_FOR_API_CALL_IN_MILLIS = 2500;
+    private static final long DEFAULT_TIMEOUT_FOR_API_CALL_IN_MILLIS = Long.MAX_VALUE;
+   // private static final long DEFAULT_TIMEOUT_FOR_DB_QUERY_IN_MILLIS = 2000;
+    private static final long DEFAULT_TIMEOUT_FOR_DB_QUERY_IN_MILLIS = Long.MAX_VALUE;
+    //private static final long DEFAULT_OVERALL_TIMEOUT_IN_MILLIS = 5000;
+    private static final long DEFAULT_OVERALL_TIMEOUT_IN_MILLIS = Long.MAX_VALUE;
 
     @Override
     public long getTimeoutForApiCallInMillis() {

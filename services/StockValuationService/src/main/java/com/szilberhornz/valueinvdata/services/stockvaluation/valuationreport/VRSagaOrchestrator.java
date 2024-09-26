@@ -80,6 +80,7 @@ public class VRSagaOrchestrator {
                 Thread.currentThread().interrupt();
             }
         } else {
+            LOG.info("Valuation report for ticker {} generated from in-memory cache", upperCaseTicker);
             return new ValuationReport.Builder()
                     .recordHolder(recordFromCache)
                     .responseBodyFormatter(this.formatter)
@@ -91,6 +92,7 @@ public class VRSagaOrchestrator {
             try {
                 //this is the most data we are going to have
                 recordFromFmpApi = this.dataBroker.getDataFromFmpApi(recordFromDb, upperCaseTicker, this.circuitBreaker.getTimeoutForApiCallInMillis());
+                LOG.info("Valuation report for ticker {} generated from the FMP api", upperCaseTicker);
                 finalResponse = new ValuationReport.Builder()
                         .statusCode(HttpStatusCode.OK.getStatusCode())
                         .recordHolder(recordFromFmpApi)
@@ -99,8 +101,14 @@ public class VRSagaOrchestrator {
             } catch (final Throwable throwable) {
                 //we handle error and return what we can (that is what we have from the db which is equals or a superset of what we have from the cache)
                 finalResponse = this.handleFmpApiError(recordFromDb, throwable, upperCaseTicker);
+                if (recordFromDb == null) {
+                    LOG.warn("No report was generated for ticker {}, received error messages from FMP api, sending back the appropriate response to the caller!", upperCaseTicker);
+                } else {
+                    LOG.info("Valuation report for ticker {} generated from database and FMP api error messages", upperCaseTicker);
+                }
             }
         } else {
+            LOG.info("Valuation report for ticker {} generated from database", upperCaseTicker);
             finalResponse = new ValuationReport.Builder()
                     .recordHolder(recordFromDb)
                     .responseBodyFormatter(this.formatter)
