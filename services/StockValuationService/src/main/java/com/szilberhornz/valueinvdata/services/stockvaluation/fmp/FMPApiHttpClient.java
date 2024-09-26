@@ -40,7 +40,7 @@ public class FMPApiHttpClient {
     }
 
     @Nullable
-    public HttpResponse<String> getDiscountedCashFlow(final String ticker) throws NoApiKeyFoundException {
+    public HttpResponse<String> getDiscountedCashFlow(final String ticker) {
         final String uri = DCF_ENDPOINT +
                 ticker +
                 API_KEY +
@@ -50,7 +50,7 @@ public class FMPApiHttpClient {
     }
 
     @Nullable
-    public HttpResponse<String> getPriceTargetConsensus(final String ticker) throws NoApiKeyFoundException {
+    public HttpResponse<String> getPriceTargetConsensus(final String ticker) {
         final String uri = PTC_ENDPOINT +
                 ticker +
                 API_KEY_AND +
@@ -60,7 +60,7 @@ public class FMPApiHttpClient {
     }
 
     @Nullable
-    public HttpResponse<String> getPriceTargetSummary(final String ticker) throws NoApiKeyFoundException {
+    public HttpResponse<String> getPriceTargetSummary(final String ticker) {
         final String uri = PTS_ENDPOINT +
                 ticker +
                 API_KEY_AND +
