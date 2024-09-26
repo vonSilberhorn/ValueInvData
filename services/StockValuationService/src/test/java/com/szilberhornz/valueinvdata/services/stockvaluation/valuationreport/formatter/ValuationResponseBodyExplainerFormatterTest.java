@@ -82,20 +82,20 @@ class ValuationResponseBodyExplainerFormatterTest {
     }
 
     @Test
-    public void testEmpty(){
+    void testEmpty(){
         final ValuationResponseBodyExplainerFormatter sut = new ValuationResponseBodyExplainerFormatter();
         assertEquals("Could not find any data!", sut.getFormattedResponseBody(null, null));
     }
 
 
     @Test
-    public void testEmptyWithErrorMsg(){
+    void testEmptyWithErrorMsg(){
         final ValuationResponseBodyExplainerFormatter sut = new ValuationResponseBodyExplainerFormatter();
         assertEquals("Error!", sut.getFormattedResponseBody(null, "Error!"));
     }
 
     @Test
-    public void testPartialWithErrorMsg(){
+    void testPartialWithErrorMsg(){
         final String expected = "On 2024-09-26 the discounted cash flow valuation model for the ticker DUMMY shows that the fair valuation per share is 15.50, while the current price per share is 14.00.\n" +
                 "This means that the company seems to be undervalued on the stock market and may be considered a candidate to buy or hold\n" +
                 "It is advised to look for other valuation methods too, especially if the spread between the valuation price and the actual stock price is large.\n" +
@@ -110,7 +110,7 @@ class ValuationResponseBodyExplainerFormatterTest {
     }
 
     @Test
-    public void testPartialWithoutDcf(){
+    void testPartialWithoutDcf(){
         final String expected = "Last month 2 stock analysts made price target prediction about this stock, with and average price target of 16.00. \n" +
                 "Last quarter 5 analysts made predictions with 14.00 average price target!\n" +
                 " \n" +
