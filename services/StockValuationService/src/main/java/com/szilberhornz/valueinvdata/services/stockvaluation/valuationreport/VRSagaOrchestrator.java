@@ -66,8 +66,8 @@ public class VRSagaOrchestrator {
             try {
                 //this fills up missing data if it can
                 final CompletableFuture<RecordHolder> rhFuture = CompletableFuture.supplyAsync(() -> this.dataBroker.getDataFromDb(recordFromCache, upperCaseTicker));
-                //wait till timeout or success, we go to the FMP Api only if we are still missing data
-                recordFromDb = rhFuture.get(this.circuitBreaker.getTimeoutForDbQueryInMillis(), TimeUnit.MILLISECONDS);
+                //wait till timeout or success, we go to the FMP Api only if we are still missing data.
+                recordFromDb = rhFuture.completeOnTimeout(recordFromCache, this.circuitBreaker.getTimeoutForDbQueryInMillis(), TimeUnit.MILLISECONDS).get();
             } catch (final ExecutionException executionException) {
                 if (executionException.getCause() instanceof final IllegalStateException ise) {
                     //we must break here since we should not return data that we know is inconsistent or otherwise wrong
@@ -78,9 +78,6 @@ public class VRSagaOrchestrator {
             } catch (final InterruptedException interruptedException) {
                 LOG.error("Unexpected thread interruption while trying to get data for ticker {} from the database!", upperCaseTicker, interruptedException);
                 Thread.currentThread().interrupt();
-            } catch (final TimeoutException timeoutException) {
-                //log but otherwise do nothing, we go to the FMP Api
-                LOG.error("Circuit breaker timeout reached while trying to get data for ticker {} from the database!", upperCaseTicker);
             }
         } else {
             return new ValuationResponse.Builder()

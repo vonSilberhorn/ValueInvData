@@ -85,17 +85,15 @@ public class VRSagaDataBroker {
         }
         try {
             //but we have to block before returning to scrape all the missing data we can
-            dcfDto = dcfDto == null ? dcfDtoFuture.get(timeOutInMillis, TimeUnit.MILLISECONDS) : dcfDto;
-            ptsDto = ptsDto == null ? ptsDtoFuture.get(timeOutInMillis, TimeUnit.MILLISECONDS) : ptsDto;
-            ptcDto = ptcDto == null ? ptcDtoFuture.get(timeOutInMillis, TimeUnit.MILLISECONDS) : ptcDto;
+            dcfDto = dcfDto == null ? dcfDtoFuture.completeOnTimeout(null, timeOutInMillis, TimeUnit.MILLISECONDS).get() : dcfDto;
+            ptsDto = ptsDto == null ? ptsDtoFuture.completeOnTimeout(null, timeOutInMillis, TimeUnit.MILLISECONDS).get() : ptsDto;
+            ptcDto = ptcDto == null ? ptcDtoFuture.completeOnTimeout(null, timeOutInMillis, TimeUnit.MILLISECONDS).get() : ptcDto;
         } catch (final InterruptedException interruptedException) {
             LOG.error("Unexpected interruption while getting data from the FMP api for ticker {}!", ticker, interruptedException);
             Thread.currentThread().interrupt();
         } catch (final ExecutionException executionException) {
             //we must throw the cause of the execution exception because it may be api key issue
             throw executionException.getCause();
-        } catch (final TimeoutException timeoutException) {
-            LOG.error("Circuit breaker timeout while trying to get data from the FMP api for ticker {}!", ticker, timeoutException);
         }
         //as this is the last step, we return what we have, even if it's all null
         return RecordHolder.newRecordHolder(ticker, dcfDto, ptcDto, ptsDto);
