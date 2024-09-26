@@ -104,7 +104,6 @@ public class VRSagaDataBroker {
 
     public void persistData(final String ticker, final RecordHolder recordFromCache, final RecordHolder recordFromDb, final RecordHolder recordFromFmpApi) {
         //the api data is a superset of the others
-        //todo write data from the dbresponse to the cache too
         if (recordFromFmpApi != null) {
             final DiscountedCashFlowDTO dcfDto = recordFromFmpApi.getDiscountedCashFlowDto();
             final PriceTargetConsensusDTO ptcDto = recordFromFmpApi.getPriceTargetConsensusDto();
