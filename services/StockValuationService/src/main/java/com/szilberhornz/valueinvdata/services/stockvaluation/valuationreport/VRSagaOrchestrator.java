@@ -36,9 +36,9 @@ public class VRSagaOrchestrator {
         this.dataBroker = dataBroker;
     }
 
-    public ValuationResponse getValuationResponse(final String ticker){
+    public ValuationReport getValuationResponse(final String ticker){
         try {
-            final CompletableFuture<ValuationResponse> responseFuture = CompletableFuture.supplyAsync(()->this.generateValueReport(ticker.toUpperCase(Locale.ROOT)));
+            final CompletableFuture<ValuationReport> responseFuture = CompletableFuture.supplyAsync(()->this.generateValueReport(ticker.toUpperCase(Locale.ROOT)));
             return responseFuture.get(this.circuitBreaker.getOverallTimeoutInMillis(), TimeUnit.MILLISECONDS);
         } catch (final InterruptedException interruptedException) {
             LOG.error("Unexpected interruption while generating report for ticker {}", ticker, interruptedException);
@@ -53,7 +53,7 @@ public class VRSagaOrchestrator {
         }
     }
 
-    private ValuationResponse generateValueReport(final String upperCaseTicker) {
+    private ValuationReport generateValueReport(final String upperCaseTicker) {
         if (!this.tickerCache.tickerExists(upperCaseTicker)) {
             LOG.warn("Received illegal request for invalid ticker {}! Sending back http 403", upperCaseTicker);
             return this.respondToInvalidTicker(upperCaseTicker);
@@ -80,18 +80,18 @@ public class VRSagaOrchestrator {
                 Thread.currentThread().interrupt();
             }
         } else {
-            return new ValuationResponse.Builder()
+            return new ValuationReport.Builder()
                     .recordHolder(recordFromCache)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
                     .build();
         }
-        ValuationResponse finalResponse;
+        ValuationReport finalResponse;
         if (recordFromDb == null || recordFromDb.isDataMissing()) {
             try {
                 //this is the most data we are going to have
                 recordFromFmpApi = this.dataBroker.getDataFromFmpApi(recordFromDb, upperCaseTicker, this.circuitBreaker.getTimeoutForApiCallInMillis());
-                finalResponse = new ValuationResponse.Builder()
+                finalResponse = new ValuationReport.Builder()
                         .statusCode(HttpStatusCode.OK.getStatusCode())
                         .recordHolder(recordFromFmpApi)
                         .responseBodyFormatter(this.formatter)
@@ -101,7 +101,7 @@ public class VRSagaOrchestrator {
                 finalResponse = this.handleFmpApiError(recordFromDb, throwable, upperCaseTicker);
             }
         } else {
-            finalResponse = new ValuationResponse.Builder()
+            finalResponse = new ValuationReport.Builder()
                     .recordHolder(recordFromDb)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
@@ -115,9 +115,9 @@ public class VRSagaOrchestrator {
         return finalResponse;
     }
 
-    private ValuationResponse respondToInvalidTicker(final String ticker) {
+    private ValuationReport respondToInvalidTicker(final String ticker) {
         final String errorMessage = String.format(INVALID_TICKER_MESSAGE, ticker);
-        return new ValuationResponse.Builder()
+        return new ValuationReport.Builder()
                 .statusCode(HttpStatusCode.FORBIDDEN.getStatusCode())
                 .errorMessage(errorMessage)
                 .build();
@@ -125,20 +125,20 @@ public class VRSagaOrchestrator {
 
 
     @NotNull
-    private ValuationResponse handleDbError(final String ticker, final Exception illegalStateException) {
+    private ValuationReport handleDbError(final String ticker, final Exception illegalStateException) {
         LOG.error("Querying the database encountered a fatal data consistency issue for ticker {}! Returning http 500 as a response!", ticker, illegalStateException);
         return this.returnInternalError(ticker);
     }
 
-    private ValuationResponse returnInternalError(final String ticker){
-        return new ValuationResponse.Builder()
+    private ValuationReport returnInternalError(final String ticker){
+        return new ValuationReport.Builder()
                 .statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
                 .errorMessage("The server encountered an unexpected internal error when trying to generate report for ticker " + ticker + "!")
                 .build();
     }
 
     @NotNull
-    private ValuationResponse handleFmpApiError(final RecordHolder recordHolder, final Throwable throwable, final String ticker) {
+    private ValuationReport handleFmpApiError(final RecordHolder recordHolder, final Throwable throwable, final String ticker) {
         final boolean noRecord = recordHolder == null;
         if (throwable instanceof final ApiKeyException ex) {
             return this.translateExceptedExceptions(noRecord, recordHolder, HttpStatusCode.UNAUTHORIZED.getStatusCode(), ex);
@@ -150,7 +150,7 @@ public class VRSagaOrchestrator {
         } else {
             //LOG for internal use but return the partial data we have, and doesn't leak unknown errors
             LOG.error("Encountered unexpected exception while getting data from FMP Api!", throwable);
-            return new ValuationResponse.Builder()
+            return new ValuationReport.Builder()
                     .recordHolder(recordHolder)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
@@ -159,15 +159,15 @@ public class VRSagaOrchestrator {
     }
 
     @NotNull
-    private ValuationResponse translateExceptedExceptions(final boolean noRecord, final RecordHolder recordHolder, final int httpStatusCode, final RuntimeException rte) {
+    private ValuationReport translateExceptedExceptions(final boolean noRecord, final RecordHolder recordHolder, final int httpStatusCode, final RuntimeException rte) {
         if (noRecord) {
-            return new ValuationResponse.Builder()
+            return new ValuationReport.Builder()
                     .errorMessage(rte.getMessage())
                     .statusCode(httpStatusCode)
                     .build();
         } else {
             //in this case we return the data we have but the error message from the API too
-            return new ValuationResponse.Builder()
+            return new ValuationReport.Builder()
                     .recordHolder(recordHolder)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
