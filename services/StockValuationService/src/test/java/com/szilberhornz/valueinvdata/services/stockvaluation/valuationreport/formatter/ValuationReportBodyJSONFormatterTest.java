@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ValuationResponseBodyJSONFormatterTest {
+class ValuationReportBodyJSONFormatterTest {
 
     private final ValuationResponseBodyJSONFormatter sut = new ValuationResponseBodyJSONFormatter();
 

@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ValuationResponseTest {
+class ValuationReportTest {
 
     @Test
     void testFullResponse() {
         final String expectedJsonString = "{\"ticker\":\"DUMMY\",\"error\":\"testMsg\"}";
         final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY", null, null, null);
-        final ValuationResponse response = new ValuationResponse.Builder()
+        final ValuationReport response = new ValuationReport.Builder()
                 .statusCode(HttpStatusCode.OK.getStatusCode())
                 .responseBodyFormatter(new ValuationResponseBodyJSONFormatter())
                 .recordHolder(recordHolder)
