@@ -2,7 +2,6 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.fmp;
 
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.HttpClientFactory;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.FMPAuthorizer;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
