@@ -8,6 +8,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyExc
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.circuitbreaker.VRSagaCircuitBreaker;
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.formatter.ValuationResponseBodyFormatter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeoutException;
  * The orchestrator class for the ValuationReport saga. Responsible for receiving the http request coming on
  * /valuation-report?ticker=TICKER and generating report for the requested TICKER.
  * It first tries the cache, then the database and tries to plug in any missing data from the FMP api, then
- * send as the new data back to persistence and cache. Uses simple circuit breaker logic for timeouts, and also
+ * send all the new data back to persistence and cache. Uses simple circuit breaker logic for timeouts, and also
  * relies heavily on asynchronous, parallel execution using CompletableFuture instances.
  */
 public class VRSagaOrchestrator {
@@ -60,79 +61,101 @@ public class VRSagaOrchestrator {
         }
     }
 
+    @NotNull
     private ValuationReport generateValueReport(final String upperCaseTicker) {
-        if (!this.tickerCache.tickerExists(upperCaseTicker)) {
-            LOG.warn("Received illegal request for invalid ticker {}! Sending back http 403", upperCaseTicker);
+        if (!this.tickerCache.tickerExists(upperCaseTicker)) { //the easy way out
             return this.respondToInvalidTicker(upperCaseTicker);
         }
         //try to get report RecordHolder from cache, then from db then from FMP API
         final RecordHolder recordFromCache = this.dataBroker.getFromCache(upperCaseTicker);
-        RecordHolder recordFromDb = null;
-        RecordHolder recordFromFmpApi = null;
-        if (recordFromCache == null || recordFromCache.isDataMissing()) {
-            try {
-                //this fills up missing data if it can
-                final CompletableFuture<RecordHolder> rhFuture = CompletableFuture.supplyAsync(() -> this.dataBroker.getDataFromDb(recordFromCache, upperCaseTicker));
-                //wait till timeout or success, we go to the FMP Api only if we are still missing data.
-                recordFromDb = rhFuture.completeOnTimeout(recordFromCache, this.circuitBreaker.getTimeoutForDbQueryInMillis(), TimeUnit.MILLISECONDS).get();
-            } catch (final ExecutionException executionException) {
-                if (executionException.getCause() instanceof final IllegalStateException ise) {
-                    //we must break here since we should not return data that we know is inconsistent or otherwise wrong
-                    return this.handleDbError(upperCaseTicker, ise);
-                }
-                //else log and move on, the expected IllegalStateException is already handled
-                LOG.error("Unexpected exception happened while trying to get data for ticker {} from the database!", upperCaseTicker, executionException.getCause());
-            } catch (final InterruptedException interruptedException) {
-                LOG.error("Unexpected thread interruption while trying to get data for ticker {} from the database!", upperCaseTicker, interruptedException);
-                Thread.currentThread().interrupt();
-            }
-        } else {
+        final RecordHolder recordFromDb;
+        if (recordFromCache != null && !recordFromCache.isDataMissing()) { //a quick win
             LOG.info("Valuation report for ticker {} generated from in-memory cache", upperCaseTicker);
             return new ValuationReport.Builder()
                     .recordHolder(recordFromCache)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
                     .build();
-        }
-        final ValuationReport finalResponse;
-        if (recordFromDb == null || recordFromDb.isDataMissing()) {
-            //this is the most data we are going to have
-            recordFromFmpApi = this.dataBroker.getDataFromFmpApi(recordFromDb, upperCaseTicker, this.circuitBreaker.getTimeoutForApiCallInMillis());
-            if (recordFromFmpApi.getCauseOfNullDtos() == null){
-                LOG.info("Valuation report for ticker {} generated from the FMP api", upperCaseTicker);
-                finalResponse = new ValuationReport.Builder()
-                        .statusCode(HttpStatusCode.OK.getStatusCode())
-                        .recordHolder(recordFromFmpApi)
-                        .responseBodyFormatter(this.formatter)
-                        .build();
-            } else {
-                if (recordFromDb == null && recordFromFmpApi.getDtoCount() == 0) {
-                    LOG.warn("No report was generated for ticker {}! No data found in database and only received error messages from FMP api, sending back the appropriate response to the caller!", upperCaseTicker);
-                } else if (recordFromDb != null && (recordFromDb.getDtoCount() == recordFromFmpApi.getDtoCount())) {
-                    LOG.info("Valuation report for ticker {} generated from database and FMP api error messages", upperCaseTicker);
-                } else {
-                    LOG.info("Valuation report for ticker {} generated from FMP Api partial data and error messages", upperCaseTicker);
-                }
-                //we handle error and return what we can (that is what we have from the db which is equals or a superset of what we have from the cache)
-                finalResponse = this.handleFmpApiError(recordFromFmpApi, recordFromFmpApi.getCauseOfNullDtos(), upperCaseTicker);
-            }
         } else {
+            //this record may contain fatal error, we must check for that
+            recordFromDb = this.getRecordFromDatabase(upperCaseTicker, recordFromCache);
+            if (recordFromDb != null && recordFromDb.getCauseOfNullDtos() != null && recordFromDb.getCauseOfNullDtos() instanceof final IllegalStateException ise) {
+                return this.handleDbError(upperCaseTicker, ise);
+            }
+        }
+        if (recordFromDb != null && !recordFromDb.isDataMissing()){
             LOG.info("Valuation report for ticker {} generated from database", upperCaseTicker);
-            finalResponse = new ValuationReport.Builder()
+            return new ValuationReport.Builder()
                     .recordHolder(recordFromDb)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
                     .build();
+        } else {
+            return this.completeReportFromFmpApi(upperCaseTicker, recordFromDb, recordFromCache);
         }
-        //last step is an async call for persisting all the data if needed
-        final RecordHolder finalRecordFromDb = recordFromDb;
-        final RecordHolder finalRecordFromFmpApi = recordFromFmpApi;
-        CompletableFuture.runAsync(() -> this.dataBroker.persistData(upperCaseTicker, recordFromCache, finalRecordFromDb, finalRecordFromFmpApi));
-        //we won't wait for the CompletableFuture to finish
-        return finalResponse;
+    }
+
+    @NotNull
+    private ValuationReport completeReportFromFmpApi(final String upperCaseTicker, final RecordHolder recordFromDb, final RecordHolder recordFromCache) {
+        final RecordHolder recordFromFmpApi = this.dataBroker.getDataFromFmpApi(recordFromDb, upperCaseTicker, this.circuitBreaker.getTimeoutForApiCallInMillis());
+        if (recordFromFmpApi.getCauseOfNullDtos() == null){
+            LOG.info("Valuation report for ticker {} generated from the FMP api", upperCaseTicker);
+            //before returning, make sure to start another thread to persist the data from the FMP api to db and cache!
+            this.cacheAndPersistAnyNewData(upperCaseTicker, recordFromCache, recordFromDb, recordFromFmpApi);
+            return new ValuationReport.Builder()
+                    .statusCode(HttpStatusCode.OK.getStatusCode())
+                    .recordHolder(recordFromFmpApi)
+                    .responseBodyFormatter(this.formatter)
+                    .build();
+        } else {
+            //else we need to deal with the exceptions coming from the FMP api
+            if (recordFromDb == null && recordFromFmpApi.getDtoCount() == 0) {
+                LOG.warn("No report was generated for ticker {}! No data found in database and only received error messages from FMP api, sending back the appropriate response to the caller!", upperCaseTicker);
+            } else if (recordFromDb != null && (recordFromDb.getDtoCount() == recordFromFmpApi.getDtoCount())) {
+                LOG.warn("Valuation report for ticker {} generated from actual data from database and error messages from FMP api", upperCaseTicker);
+            } else {
+                LOG.warn("Valuation report for ticker {} generated from FMP Api partial data and error messages", upperCaseTicker);
+            }
+            //same as above, before returning, make sure to start another thread to persist the data from the FMP api to db and cache!
+            this.cacheAndPersistAnyNewData(upperCaseTicker, recordFromCache, recordFromDb, recordFromFmpApi);
+            //we handle error and return what we can (that is what we have from the db which is equals or a superset of what we have from the cache)
+            return this.handleFmpApiError(recordFromFmpApi, recordFromFmpApi.getCauseOfNullDtos(), upperCaseTicker);
+        }
+    }
+
+    private void cacheAndPersistAnyNewData(final String upperCaseTicker, final RecordHolder recordFromCache, final RecordHolder recordFromDb, final RecordHolder recordFromFmpApi) {
+        CompletableFuture.runAsync(() -> this.dataBroker.persistData(upperCaseTicker, recordFromCache, recordFromDb, recordFromFmpApi));
+    }
+
+    @Nullable
+    private RecordHolder getRecordFromDatabase(final String upperCaseTicker, final RecordHolder recordFromCache) {
+        RecordHolder recordFromDb = null;
+        try {
+            //this fills up missing data if it can
+            final CompletableFuture<RecordHolder> rhFuture = CompletableFuture.supplyAsync(() -> this.dataBroker.getDataFromDb(recordFromCache, upperCaseTicker));
+            //wait till timeout or success, we go to the FMP Api only if we are still missing data.
+            recordFromDb = rhFuture.completeOnTimeout(recordFromCache, this.circuitBreaker.getTimeoutForDbQueryInMillis(), TimeUnit.MILLISECONDS).get();
+        } catch (final ExecutionException executionException) {
+            //this is a fatal error, we must handle it and return http 500. This means that our database tables contain more columns of data
+            //than our record classes have - for this very reason it should never even happen to begin with.
+            if (executionException.getCause() instanceof final IllegalStateException ise) {
+                if (recordFromCache != null){
+                    recordFromDb = RecordHolder.newRecordHolder(upperCaseTicker, recordFromCache.getDiscountedCashFlowDto(), recordFromCache.getPriceTargetConsensusDto(), recordFromCache.getPriceTargetSummaryDto(), ise);
+                } else {
+                    recordFromDb = RecordHolder.newRecordHolder(upperCaseTicker, null, null, null, ise);
+                }
+            }
+            //else log and move on, the expected IllegalStateException is already handled
+            LOG.error("Unexpected exception happened while trying to get data for ticker {} from the database!", upperCaseTicker, executionException.getCause());
+        } catch (final InterruptedException interruptedException) {
+            LOG.error("Unexpected thread interruption while trying to get data for ticker {} from the database!", upperCaseTicker, interruptedException);
+            Thread.currentThread().interrupt();
+        }
+        return recordFromDb;
     }
 
     private ValuationReport respondToInvalidTicker(final String ticker) {
+        LOG.warn("Received illegal request for invalid ticker {}! Sending back http 403", ticker);
         final String errorMessage = String.format(INVALID_TICKER_MESSAGE, ticker);
         return new ValuationReport.Builder()
                 .statusCode(HttpStatusCode.FORBIDDEN.getStatusCode())

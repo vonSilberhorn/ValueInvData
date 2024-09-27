@@ -14,7 +14,7 @@ I have set up a multi-module project in the repo, using the BOM model: dependenc
 
 
 Currently, this is the only actual project in this would-be multimodule repo.
-This is a http server generating valuation reports on stocks. It handles one saga - business process - and that is 
+This is a simple http server generating valuation reports on stocks. It handles one saga - business process - and that is 
 when a request comes in, referencing a ticker of a stock, e.g. 'AAPL' for Apple, it generates a custom valuation report with educational purpose recommendations.
 
 The report includes a discounted cash flow valuation, compared to the current stock price, and summary reports on stock analysts' price targets for the stock, giving a good overview on whether the given stock is generally undervalued, fairly valued, or overvalued.
@@ -44,14 +44,20 @@ I also added two possible DataSource implementations - as already mentioned brie
 To defend against malicious user input, I leveraged the fact that there aren't an infinite number of tickers in existence. So I simply downloaded ALL existing tickers in a file (less than 1 MB) and the app reads and caches all of those in the [Ticker Cache](services/StockValuationService/src/main/java/com/szilberhornz/valueinvdata/services/stockvaluation/cache/TickerCache.java). If someone sends a request with a ticker that is not in the cache, the service returns an HTTP 403
 
 *Other notes* I tried to implement production-level exception handling and logging, adding javadocs and even comments about my intentions wherever I felt it was needed. 
-For the https client talking to the FMP api, I used the "new" http client library available since JDK11. I also wrote more than a 120 unit tests - as it stands at the time of writing this. 
+For the https client talking to the FMP api, I used the "new" http client library available since JDK11. I also wrote more than 120 unit tests - as it stands at the time of writing this. 
 And last but not least, I also used Sonar reports as an IDE plugin and as a GitHub Action to help me maintain high code quality standards.
+
+**Known shortcomings** One that sticks out the most is that the data the app generates the reports from is pretty static. 
+I chose a topic that is not too dynamic in itself, as valuations don't change frequently and especially not radically, so even if the "current" stock price in the valuation is stale, 
+the rest of it is pretty relevant for like a month or so. Yet, ideally cached items shouldn't live more than a day and the database entries should also be updated at least daily. 
+
+The other is a lack of containerization which ties the running of the server to having at least JRE21 - I plan to work on this soon.
 
 ### How to run the service 
 
 #### In IDE
 
-Since containerizing this app is a next step, for now even I only ran it in IDE - I use IntelliJ. 
+Since containerizing this app is a next step, for now even I only ran it in IDE - I use IntelliJ. JDK21 is needed due to the fact that language level is on the 21 LTS version.
 One of the most important things to note is that to access the Financial Modeling Prep api, you need an api key. As I noted in the code, this would be the responsibility of the app to provide through 
 a secret store like Vault. But since it's still just a demo, you are better off generating a free key at [the FMP website](https://site.financialmodelingprep.com/developer/docs). You can then use the -DFMP_API_KEY=KEY VM Option where KEY is the api key string.
 
