@@ -122,8 +122,6 @@ public class VRSagaDataBroker {
             this.addToCache(ticker, recordFromCache, recordFromFmpApi);
             this.writeToDb(ticker, recordFromDb, recordFromFmpApi);
             //write records from db to cache
-        } else if (recordFromDb != null) {
-            this.addToCache(ticker, recordFromCache, recordFromDb);
         }
     }
 

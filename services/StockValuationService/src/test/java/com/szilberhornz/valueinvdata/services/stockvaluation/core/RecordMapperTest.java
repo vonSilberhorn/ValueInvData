@@ -7,9 +7,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.http.HttpResponse;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 class RecordMapperTest {
@@ -128,5 +130,29 @@ class RecordMapperTest {
         when(response.body()).thenReturn(invalidStringResponse);
         final PriceTargetSummaryDTO result = RecordMapper.newPtsDto(response);
         assertNull(result);
+    }
+
+    @Test
+    void illegalResultSetDataShouldThrowException() throws SQLException {
+        final ResultSet resultSetMock = Mockito.mock(ResultSet.class);
+        final ResultSetMetaData rsmMock = Mockito.mock(ResultSetMetaData.class);
+        Mockito.when(rsmMock.getColumnCount()).thenReturn(1);
+        Mockito.when(resultSetMock.getMetaData()).thenReturn(rsmMock);
+        Mockito.when(resultSetMock.next())
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(false);
+        Mockito.when(resultSetMock.getObject(1))
+                .thenReturn("test")
+                .thenReturn("test")
+                .thenReturn("test")
+                .thenReturn("test")
+                .thenReturn("test");
+        final Exception exception = assertThrows(IllegalStateException.class, () -> RecordMapper.newDcfDto(resultSetMock));
+        assertEquals("The ResultSet unexpectedly held more than one row of data! This should not have happened as " +
+                "the ticker is the primary key in the db tables and we only have 4 columns!", exception.getMessage());
     }
 }

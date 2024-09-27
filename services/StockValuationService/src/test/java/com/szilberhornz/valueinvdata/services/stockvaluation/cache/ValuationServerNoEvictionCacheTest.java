@@ -71,4 +71,25 @@ class ValuationServerNoEvictionCacheTest {
         assertEquals(213.23, this.sut.get("AAPL").getPriceTargetSummaryDto().lastMonthAvgPriceTarget());
         assertNull(this.sut.get("AAPL").getDiscountedCashFlowDto());
     }
+
+    @Test
+    void putNullPtsDtoShouldDoNothing() {
+        final PriceTargetSummaryDTO ptsDto = null;
+        this.sut.put("DUMMY", ptsDto);
+        assertNull(this.sut.get("DUMMY"));
+    }
+
+    @Test
+    void putNullPtcDtoShouldDoNothing() {
+        final PriceTargetConsensusDTO ptcDto = null;
+        this.sut.put("DUMMY", ptcDto);
+        assertNull(this.sut.get("DUMMY"));
+    }
+
+    @Test
+    void putNullDcfDtoShouldDoNothing() {
+        final DiscountedCashFlowDTO dcfDto = null;
+        this.sut.put("DUMMY", dcfDto);
+        assertNull(this.sut.get("DUMMY"));
+    }
 }

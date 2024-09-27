@@ -83,9 +83,10 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
             } else if (errorMessage != null && !errorMessage.isBlank()) {
                 if (errorMessage.startsWith("{\n  \"Error Message\":")) {
                     final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
+                    stringBuilder.append("\n\nUnfortunately no more data is available at this time, as the FMP Api returned the following response for some queries:\n");
                     stringBuilder.append(temporalJsonFormatter.getString("Error Message"));
                 } else {
-                    stringBuilder.append("Encountered the following issue while retrieving the data: ");
+                    stringBuilder.append("\nEncountered the following issue while retrieving the data: ");
                     stringBuilder.append(errorMessage);
                 }
             }

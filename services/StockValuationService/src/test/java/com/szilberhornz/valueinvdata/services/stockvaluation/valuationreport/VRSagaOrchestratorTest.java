@@ -222,5 +222,18 @@ class VRSagaOrchestratorTest {
         assertEquals("", result.getErrorMessage());
     }
 
-
+    @Test
+    void fmpRandomExceptionWithoutEvenPartialDataShouldProduce500() throws Throwable {
+        Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
+        Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
+        Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
+        final RuntimeException runtimeException = new RuntimeException("unexpected!");
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", null, null, null, runtimeException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(null, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
+        final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
+        final ValuationReport result = sut.getValuationResponse("DUMMY");
+        assertEquals(500, result.getStatusCode());
+        assertEquals("{\"error\":\"The server encountered an unexpected internal error when trying to generate report for ticker DUMMY!\"}", result.getMessageBody());
+        assertEquals("The server encountered an unexpected internal error when trying to generate report for ticker DUMMY!", result.getErrorMessage());
+    }
 }

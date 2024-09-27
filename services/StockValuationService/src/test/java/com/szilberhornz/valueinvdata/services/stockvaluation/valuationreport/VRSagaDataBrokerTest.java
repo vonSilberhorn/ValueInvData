@@ -6,6 +6,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.Discoun
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.FMPResponseHandler;
+import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.RateLimitReachedException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.persistence.api.ValuationDBRepository;
 import org.junit.jupiter.api.Test;
@@ -112,6 +113,29 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
+    void getDataFromApiShouldReturnExecutionExceptionCause2() {
+        final RateLimitReachedException apiKeyException = new RateLimitReachedException("test");
+        Mockito.when(this.fmpHandlerMock.getPriceTargetConsensusReportFromFmpApi("DUMMY")).thenThrow(apiKeyException);
+        final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
+        final RecordHolder result = sut.getDataFromFmpApi(null, "DUMMY", 2500);
+        assertInstanceOf(RateLimitReachedException.class, result.getCauseOfNullDtos());
+        assertEquals("test", result.getCauseOfNullDtos().getMessage());
+    }
+
+    @Test
+    void getDataFromApiShouldReturnExecutionExceptionCauseAndPartialData() {
+        final RateLimitReachedException apiKeyException = new RateLimitReachedException("test");
+        Mockito.when(this.fmpHandlerMock.getDiscountedCashFlowReportFromFmpApi("DUMMY")).thenReturn(this.dcfDto);
+        Mockito.when(this.fmpHandlerMock.getPriceTargetSummaryReportFromFmpApi("DUMMY")).thenThrow(apiKeyException);
+        final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
+        final RecordHolder result = sut.getDataFromFmpApi(null, "DUMMY", 2500);
+        assertInstanceOf(RateLimitReachedException.class, result.getCauseOfNullDtos());
+        assertEquals("test", result.getCauseOfNullDtos().getMessage());
+        //we have data too!
+        assertEquals(this.dcfDto, result.getDiscountedCashFlowDto());
+    }
+
+    @Test
     void persistDataShouldInsertToDbAndCacheWhenMissing(){
         final RecordHolder recordFromApi = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, this.ptsDto);
         final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
@@ -134,6 +158,20 @@ class VRSagaDataBrokerTest {
         Mockito.verify(this.serverCacheMock, times(1)).put("DUMMY", this.ptsDto);
         Mockito.verify(this.dbRepositoryMock, times(1)).insertPriceTargetSummaryData(recordFromApi.getPriceTargetSummaryDto());
         Mockito.verify(this.dbRepositoryMock, times(1)).insertPriceTargetConsensusData(recordFromApi.getPriceTargetConsensusDto());
+    }
+
+    @Test
+    void persistDataShouldInsertToDbAndCacheWhenPartialMis2s(){
+        final RecordHolder recordFromApi = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, this.ptsDto);
+        final RecordHolder recordFromCache = RecordHolder.newRecordHolder("DUMMY", null, this.ptcDto, null);
+        final RecordHolder recordFromDb = RecordHolder.newRecordHolder("DUMMY", null, this.ptcDto, null);
+        final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
+        sut.persistData("DUMMY", recordFromCache, recordFromDb, recordFromApi);
+        Mockito.verify(this.serverCacheMock, times(1)).put("DUMMY", this.dcfDto);
+        Mockito.verify(this.serverCacheMock, times(0)).put("DUMMY", this.ptcDto);
+        Mockito.verify(this.serverCacheMock, times(1)).put("DUMMY", this.ptsDto);
+        Mockito.verify(this.dbRepositoryMock, times(1)).insertPriceTargetSummaryData(recordFromApi.getPriceTargetSummaryDto());
+        Mockito.verify(this.dbRepositoryMock, times(1)).insertDiscountedCashFlowData(recordFromApi.getDiscountedCashFlowDto());
     }
 
     @Test
