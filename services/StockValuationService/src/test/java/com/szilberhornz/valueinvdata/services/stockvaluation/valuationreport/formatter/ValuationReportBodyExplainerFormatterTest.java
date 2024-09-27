@@ -28,7 +28,6 @@ class ValuationReportBodyExplainerFormatterTest {
                 "Price target predictions are the stock analysts own overall calculations for a price point where they think a stock would be fairly valued. \n" +
                 "This is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/\n" +
                 "\n" +
-                "\n" +
                 "Disclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n";
         final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, this.ptsDto);
         final ValuationResponseBodyExplainerFormatter sut = new ValuationResponseBodyExplainerFormatter();
@@ -48,7 +47,6 @@ class ValuationReportBodyExplainerFormatterTest {
                 "Overall, the highest projection from any analyst was 20.00, while the lowest was 10.00, with the consensus being around 16.00 and the median prediction at 15.00 \n" +
                 "Price target predictions are the stock analysts own overall calculations for a price point where they think a stock would be fairly valued. \n" +
                 "This is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/\n" +
-                "\n" +
                 "\n" +
                 "Disclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n";
         final DiscountedCashFlowDTO dcfDto = new DiscountedCashFlowDTO("DUMMY", "2024-09-26", 25, 14);
@@ -71,7 +69,6 @@ class ValuationReportBodyExplainerFormatterTest {
                 "Overall, the highest projection from any analyst was 20.00, while the lowest was 10.00, with the consensus being around 16.00 and the median prediction at 15.00 \n" +
                 "Price target predictions are the stock analysts own overall calculations for a price point where they think a stock would be fairly valued. \n" +
                 "This is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/\n" +
-                "\n" +
                 "\n" +
                 "Disclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n";
         final DiscountedCashFlowDTO dcfDto = new DiscountedCashFlowDTO("DUMMY", "2024-09-26", 5, 14);
@@ -101,9 +98,10 @@ class ValuationReportBodyExplainerFormatterTest {
                 "It is advised to look for other valuation methods too, especially if the spread between the valuation price and the actual stock price is large.\n" +
                 "Find out more about the discounted cash flow valuation here: https://www.investopedia.com/terms/d/dcf.asp\n" +
                 "\n" +
+                "Unfortunately no more data is available at this time, as the FMP Api returned the following response for the PriceTargetSummary and PriceTargetConsensus calls:\n" +
+                "Error!!!\n" +
                 "\n" +
-                "Disclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n" +
-                "Encountered the following issue while retrieving the data: Error!!!";
+                "Disclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n";
         final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
         final ValuationResponseBodyExplainerFormatter sut = new ValuationResponseBodyExplainerFormatter();
         assertEquals(expected, sut.getFormattedResponseBody(recordHolder, "Error!!!"));
@@ -117,7 +115,6 @@ class ValuationReportBodyExplainerFormatterTest {
                 "Overall, the highest projection from any analyst was 20.00, while the lowest was 10.00, with the consensus being around 16.00 and the median prediction at 15.00 \n" +
                 "Price target predictions are the stock analysts own overall calculations for a price point where they think a stock would be fairly valued. \n" +
                 "This is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/\n" +
-                "\n" +
                 "\n" +
                 "Disclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n";
         final RecordHolder recordHolder = RecordHolder.newRecordHolder("DUMMY", null, this.ptcDto, this.ptsDto);

@@ -153,7 +153,7 @@ public class VRSagaOrchestrator {
 
     @NotNull
     private ValuationReport handleFmpApiError(final RecordHolder recordHolder, final Throwable throwable, final String ticker) {
-        final boolean noRecord = recordHolder == null;
+        final boolean noRecord = recordHolder == null || recordHolder.getDtoCount() == 0;
         if (throwable instanceof final ApiKeyException ex) {
             return this.translateExceptedExceptions(noRecord, recordHolder, HttpStatusCode.UNAUTHORIZED.getStatusCode(), ex);
         } else if (throwable instanceof final RateLimitReachedException rre) {

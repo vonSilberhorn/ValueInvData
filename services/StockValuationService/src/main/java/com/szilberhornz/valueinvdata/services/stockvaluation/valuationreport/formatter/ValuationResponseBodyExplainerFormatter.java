@@ -35,7 +35,7 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
             This is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/""";
 
     private static final double NINETY_PERCENT = 0.9;
-    private static final double HUNDERD_AND_TEN_PERCENT = 1.1;
+    private static final double HUNDRED_AND_TEN_PERCENT = 1.1;
 
     @Override
     public String getFormattedResponseBody(final RecordHolder recordHolder, final String errorMessage) {
@@ -43,9 +43,9 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
             if (errorMessage == null || errorMessage.isBlank()) {
                 return "Could not find any data!";
             } else {
-                final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
-                if (temporalJsonFormatter.has("Error Message")) {
-                    //some error from the FMP Api
+                //some error from the FMP Api
+                if (errorMessage.startsWith("{\n  \"Error Message\":")) {
+                    final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
                     return temporalJsonFormatter.getString("Error Message");
                 } else {
                     //invalid ticker query
@@ -73,16 +73,16 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
             //since we should own the api key, but for demo version, when the user supplies the key, we should display these issues
             if (hasDcfData && !hasPtcData && !hasPtsData && !errorMessage.isBlank()) {
                 stringBuilder.append("Unfortunately no more data is available at this time, as the FMP Api returned the following response for the " +
-                        "PriceTargetSummary and PriceTargetConsensus calls: ");
-                final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
-                if (temporalJsonFormatter.has("Error Message")) {
+                        "PriceTargetSummary and PriceTargetConsensus calls:\n");
+                if (errorMessage.startsWith("{\n  \"Error Message\":")) {
+                    final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
                     stringBuilder.append(temporalJsonFormatter.getString("Error Message"));
                 } else {
                     stringBuilder.append(errorMessage);
                 }
             } else if (errorMessage != null && !errorMessage.isBlank()) {
-                final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
-                if (temporalJsonFormatter.has("Error Message")) {
+                if (errorMessage.startsWith("{\n  \"Error Message\":")) {
+                    final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
                     stringBuilder.append(temporalJsonFormatter.getString("Error Message"));
                 } else {
                     stringBuilder.append("Encountered the following issue while retrieving the data: ");
@@ -113,7 +113,7 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
             final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("This suggests that analyst believe the stock price ");
             final double avgPrediction = (ptsDto.lastMonthAvgPriceTarget() + ptsDto.lastQuarterAvgPriceTarget()) / 2;
-            if (avgPrediction * NINETY_PERCENT < stockPrice && stockPrice < avgPrediction * HUNDERD_AND_TEN_PERCENT) {
+            if (avgPrediction * NINETY_PERCENT < stockPrice && stockPrice < avgPrediction * HUNDRED_AND_TEN_PERCENT) {
                 stringBuilder.append("is very close to its fair value so holding or selling might be better options than buying.");
             } else if (avgPrediction > stockPrice) {
                 stringBuilder.append("has a potential to climb in the future, which makes it a candidate to buy and hold.");

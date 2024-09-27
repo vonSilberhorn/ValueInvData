@@ -11,8 +11,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.persistence.api.Val
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 
 class VRSagaDataBrokerTest {
@@ -103,12 +102,13 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
-    void getDataFromApiShouldPropagateExecutionExceptionCause() throws Throwable {
+    void getDataFromApiShouldReturnExecutionExceptionCause() {
         final ApiKeyException apiKeyException = new ApiKeyException("test");
         Mockito.when(this.fmpHandlerMock.getDiscountedCashFlowReportFromFmpApi("DUMMY")).thenThrow(apiKeyException);
         final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
-        final Exception result = assertThrows(ApiKeyException.class, () -> sut.getDataFromFmpApi(null, "DUMMY", 2500));
-        assertEquals("test", result.getMessage());
+        final RecordHolder result = sut.getDataFromFmpApi(null, "DUMMY", 2500);
+        assertInstanceOf(ApiKeyException.class, result.getCauseOfNullDtos());
+        assertEquals("test", result.getCauseOfNullDtos().getMessage());
     }
 
     @Test
@@ -132,7 +132,8 @@ class VRSagaDataBrokerTest {
         Mockito.verify(this.serverCacheMock, times(0)).put("DUMMY", this.dcfDto);
         Mockito.verify(this.serverCacheMock, times(1)).put("DUMMY", this.ptcDto);
         Mockito.verify(this.serverCacheMock, times(1)).put("DUMMY", this.ptsDto);
-        Mockito.verify(this.dbRepositoryMock, times(1)).insertFullRecord(recordFromApi);
+        Mockito.verify(this.dbRepositoryMock, times(1)).insertPriceTargetSummaryData(recordFromApi.getPriceTargetSummaryDto());
+        Mockito.verify(this.dbRepositoryMock, times(1)).insertPriceTargetConsensusData(recordFromApi.getPriceTargetConsensusDto());
     }
 
     @Test
