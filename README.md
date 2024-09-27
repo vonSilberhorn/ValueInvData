@@ -24,7 +24,7 @@ More on how to actually run it, further down below.
 
 ### Design choices
 
-The code is in **Java**, language level **21(LTS)**. Java is my main language, I wrote the service from scratch within 6 days, it wouldn't have been possible for me to achieve the same thing in another language. I hope to use other languages too in future projects though.
+The code is in **Java**, language level **21(LTS)**. Java is my main language, I wrote the service from scratch within 6 days, it wouldn't have been possible for me to achieve the same speed in another language. I hope to use other languages too in future projects though.
 
 
 **No frameworks**: I did not use any frameworks such as Spring or Hibernate. This has of course forced me to write a lot more lines of code than I would have needed otherwise, but I chose to do this precisely for that reason. Because it also means
@@ -33,17 +33,17 @@ Spring, but again, this is a demo project, and I chose to practice and demo my u
 
 **Rough overview**: the app implements an [orchestrated saga](services/StockValuationService/src/main/java/com/szilberhornz/valueinvdata/services/stockvaluation/valuationreport/VRSagaOrchestrator.java) for the only business process it has, which is called ValuationReport. 
 The orchestrated saga is mainly a microservice pattern, but splitting this app into multiple microservices at this point would probably be a huge overkill. Not that I didn't implement huge overkills, but more on those later. So the process of the saga looks like this: after receiving the request, the orchestrator first looks at the 1) in-memory cache, then in case of missing or incomplete data, the 2) the database, which is either an in-memory H2DB or an externally running MSSQL instance, and as a fallback, to the 3) [Financial Modeling Prep Api](https://financialmodelingprep.com/developer/docs/), 
-which is basically the source of all actual market data. Then as step 4), it writes back all data to the database and the cache. The orchestrator also uses a very simple circuit breaker logic, which is basically implementing timeouts.
+which is basically the source of all actual market data. Then as step 4), it writes back all new data to the database and the cache. The orchestrator also uses a very simple circuit breaker logic, which is basically implementing timeouts.
 
-The process and the entire application heavily relies on asynchronous and parallel execution, which is one of the overkills I implemented, since it never going to need it, but again, it's a demo. The server starts with a thread pool of 10 to begin with, but all the data collection and writes happen in async with the extensive usage of the CompletableFuture java api. 
+The process and the entire application heavily relies on asynchronous and parallel execution, which is one of the overkills I implemented, since it never going to need it, but again, it's a demo and practice. The server starts with a thread pool of 10 to begin with, but all the data collection and writes happen in async with the extensive usage of the CompletableFuture java api. 
 
-The other overkill I implemented is a [Least Frequently Used pattern cache with async eviction](services/StockValuationService/src/main/java/com/szilberhornz/valueinvdata/services/stockvaluation/cache/ValuationServerLFUCache.java). This allows O(1) insertions, while the rebalance of the Tree responsible for frequency mapping, and the eviction only happens periodically and asynchronously. 
+The other overkill I implemented is a [Least Frequently Used pattern cache with async eviction](services/StockValuationService/src/main/java/com/szilberhornz/valueinvdata/services/stockvaluation/cache/ValuationServerLFUCache.java). This allows O(1) insertions, while the rebalance of the Tree responsible for frequency mapping, and the eviction only happens periodically and asynchronously. Obviously, this is absolutely not needed in a demo setting, but it was a fun thing to design and implement.
 
 I also added two possible DataSource implementations - as already mentioned briefly above - an in-memory db using H2DB, for which the initializer queries can be found in the standard resources folder, and one for an externally running MSSQL instance, which the app assumes it is properly setup if used. Both DataSources are backed by HikariCP connection pools, which are probably the best you can find out there. Connection pools help greatly reduce the number of physical connection instantiations on the databases, and also perfect for parallel query execution, which I also take advantage of in the app code.
 
 To defend against malicious user input, I leveraged the fact that there aren't an infinite number of tickers in existence. So I simply downloaded ALL existing tickers in a file (less than 1 MB) and the app reads and caches all of those in the [Ticker Cache](services/StockValuationService/src/main/java/com/szilberhornz/valueinvdata/services/stockvaluation/cache/TickerCache.java). If someone sends a request with a ticker that is not in the cache, the service returns an HTTP 403
 
-*Other notes* I tried to implement production-level exception handling and logging, adding javadocs and even comments about my intentions wherever I felt it was needed. 
+*Other notes*: I tried to implement production-level exception handling and logging, adding javadocs and even comments about my intentions wherever I felt it was needed. 
 For the https client talking to the FMP api, I used the "new" http client library available since JDK11. I also wrote more than 120 unit tests - as it stands at the time of writing this. 
 And last but not least, I also used Sonar reports as an IDE plugin and as a GitHub Action to help me maintain high code quality standards.
 
