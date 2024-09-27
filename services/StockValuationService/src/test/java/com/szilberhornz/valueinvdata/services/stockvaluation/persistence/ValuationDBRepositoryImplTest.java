@@ -129,6 +129,20 @@ class ValuationDBRepositoryImplTest {
     }
 
     @Test
+    void insertAndQueryDataShouldSucceedWithSeparateInsertCallsToo(){
+        final DiscountedCashFlowDTO dcfDTO = new DiscountedCashFlowDTO("DUMMY3", "2023-09-24", 66.66, 77.77);
+        final PriceTargetSummaryDTO ptsDTO = new PriceTargetSummaryDTO("DUMMY3", 5, 11.1, 5, 11.2);
+        final PriceTargetConsensusDTO ptcDTO = new PriceTargetConsensusDTO("DUMMY3", 15, 10, 15,12);
+        this.sut.insertDiscountedCashFlowData(dcfDTO);
+        this.sut.insertPriceTargetConsensusData(ptcDTO);
+        this.sut.insertPriceTargetSummaryData(ptsDTO);
+        final RecordHolder result = this.sut.queryRecords("DUMMY3");
+        assertEquals(dcfDTO, result.getDiscountedCashFlowDto());
+        assertEquals(ptsDTO, result.getPriceTargetSummaryDto());
+        assertEquals(ptcDTO, result.getPriceTargetConsensusDto());
+    }
+
+    @Test
     void nullDataShouldNotBeInserted(){
         final RecordHolder holder = RecordHolder.newRecordHolder("NONEXISTENT", null, null, null);
         this.sut.insertFullRecord(holder);

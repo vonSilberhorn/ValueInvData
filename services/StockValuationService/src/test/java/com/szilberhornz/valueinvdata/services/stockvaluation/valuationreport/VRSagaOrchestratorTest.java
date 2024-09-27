@@ -12,6 +12,8 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.for
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.concurrent.ExecutionException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -131,7 +133,8 @@ class VRSagaOrchestratorTest {
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
         final ApiKeyException apiKeyException = new ApiKeyException("test!");
-        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(null, "DUMMY", 2500L)).thenThrow(apiKeyException);
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", null, null, null, apiKeyException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(null, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
         final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
         final ValuationReport result = sut.getValuationResponse("DUMMY");
         final String expectedBody = "{\"error\":\"test!\"}";
@@ -145,7 +148,8 @@ class VRSagaOrchestratorTest {
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
         final RateLimitReachedException limitReachedException = new RateLimitReachedException("test!");
-        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(null, "DUMMY", 2500L)).thenThrow(limitReachedException);
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", null, null, null, limitReachedException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(null, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
         final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
         final ValuationReport result = sut.getValuationResponse("DUMMY");
         final String expectedBody = "{\"error\":\"test!\"}";
@@ -174,7 +178,8 @@ class VRSagaOrchestratorTest {
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(dbRecord);
         final ApiKeyException apiKeyException = new ApiKeyException("test!");
-        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(dbRecord, "DUMMY", 2500L)).thenThrow(apiKeyException);
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null, apiKeyException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(dbRecord, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
         final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
         final ValuationReport result = sut.getValuationResponse("DUMMY");
         final String expectedBody = "{\"ticker\":\"DUMMY\",\"discountedCashFlow\":{\"date\":\"2024-09-26\",\"dcf\":15.5,\"stockPrice\":14},\"error\":\"test!\"}";
@@ -190,7 +195,8 @@ class VRSagaOrchestratorTest {
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(dbRecord);
         final RateLimitReachedException limitReachedException = new RateLimitReachedException("test!");
-        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(dbRecord, "DUMMY", 2500L)).thenThrow(limitReachedException);
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null, limitReachedException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(dbRecord, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
         final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
         final ValuationReport result = sut.getValuationResponse("DUMMY");
         final String expectedBody = "{\"ticker\":\"DUMMY\",\"discountedCashFlow\":{\"date\":\"2024-09-26\",\"dcf\":15.5,\"stockPrice\":14},\"error\":\"test!\"}";
@@ -206,7 +212,8 @@ class VRSagaOrchestratorTest {
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(dbRecord);
         final RuntimeException runtimeException = new RuntimeException("unexpected!");
-        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(dbRecord, "DUMMY", 2500L)).thenThrow(runtimeException);
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null, runtimeException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(dbRecord, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
         final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
         final ValuationReport result = sut.getValuationResponse("DUMMY");
         final String expectedBody = "{\"ticker\":\"DUMMY\",\"discountedCashFlow\":{\"date\":\"2024-09-26\",\"dcf\":15.5,\"stockPrice\":14}}";
@@ -215,5 +222,18 @@ class VRSagaOrchestratorTest {
         assertEquals("", result.getErrorMessage());
     }
 
-
+    @Test
+    void fmpRandomExceptionWithoutEvenPartialDataShouldProduce500() throws Throwable {
+        Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
+        Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
+        Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
+        final RuntimeException runtimeException = new RuntimeException("unexpected!");
+        final RecordHolder fmpApiRecord = RecordHolder.newRecordHolder("DUMMY", null, null, null, runtimeException);
+        Mockito.when(this.dataBrokerMock.getDataFromFmpApi(null, "DUMMY", 2500L)).thenReturn(fmpApiRecord);
+        final VRSagaOrchestrator sut = new VRSagaOrchestrator(this.tickerCacheMock, new ValuationResponseBodyJSONFormatter(), new VRSagaDefaultCircuitBreaker(), this.dataBrokerMock);
+        final ValuationReport result = sut.getValuationResponse("DUMMY");
+        assertEquals(500, result.getStatusCode());
+        assertEquals("{\"error\":\"The server encountered an unexpected internal error when trying to generate report for ticker DUMMY!\"}", result.getMessageBody());
+        assertEquals("The server encountered an unexpected internal error when trying to generate report for ticker DUMMY!", result.getErrorMessage());
+    }
 }

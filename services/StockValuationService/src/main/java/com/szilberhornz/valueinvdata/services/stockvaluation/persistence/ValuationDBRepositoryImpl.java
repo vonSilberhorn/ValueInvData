@@ -109,12 +109,40 @@ public final class ValuationDBRepositoryImpl implements ValuationDBRepository {
         this.awaitAndHandleParallelExecution(c4, start);
     }
 
+    @Override
+    public void insertDiscountedCashFlowData(final DiscountedCashFlowDTO discountedCashFlowDTO) {
+        //async non-blocking, one retry
+        this.retryExceptionallyAsync(() -> {
+            this.writeDiscountedCashFlowTable(discountedCashFlowDTO);
+            return null;
+        });
+    }
+
+    @Override
+    public void insertPriceTargetSummaryData(final PriceTargetSummaryDTO priceTargetSummaryDTO) {
+        //async non-blocking, one retry
+        this.retryExceptionallyAsync(() -> {
+            this.writePriceTargetSummaryTable(priceTargetSummaryDTO);
+            return null;
+        });
+    }
+
+    @Override
+    public void insertPriceTargetConsensusData(final PriceTargetConsensusDTO priceTargetConsensusDTO) {
+        //async non-blocking, one retry
+        this.retryExceptionallyAsync(() -> {
+            this.writePriceTargetConsensusTable(priceTargetConsensusDTO);
+            return null;
+        });
+    }
+
     private <T> CompletableFuture<T> retryExceptionallyAsync(final Supplier<T> supplier) {
         //first run the job
         CompletableFuture<T> cf = CompletableFuture.supplyAsync(supplier);
         //rerun again in case of an AsyncRetryableException
         cf = cf.exceptionallyAsync(t -> {
             if (t.getCause() instanceof AsyncRetryableException) {
+                LOG.warn("Database operation failed, retrying!");
                 supplier.get();
             }
             return null;

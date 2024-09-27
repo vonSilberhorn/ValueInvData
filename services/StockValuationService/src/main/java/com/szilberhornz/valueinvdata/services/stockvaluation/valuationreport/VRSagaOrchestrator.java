@@ -17,6 +17,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Error messages are only included in the ValuationReports in case of invalid ticker request or if the Fmp api
+ * sent back rate limit or api key related errors
+ */
 public class VRSagaOrchestrator {
 
     private static final Logger LOG = LoggerFactory.getLogger(VRSagaOrchestrator.class);
@@ -36,9 +40,9 @@ public class VRSagaOrchestrator {
         this.dataBroker = dataBroker;
     }
 
-    public ValuationReport getValuationResponse(final String ticker){
+    public ValuationReport getValuationResponse(final String ticker) {
         try {
-            final CompletableFuture<ValuationReport> responseFuture = CompletableFuture.supplyAsync(()->this.generateValueReport(ticker.toUpperCase(Locale.ROOT)));
+            final CompletableFuture<ValuationReport> responseFuture = CompletableFuture.supplyAsync(() -> this.generateValueReport(ticker.toUpperCase(Locale.ROOT)));
             return responseFuture.get(this.circuitBreaker.getOverallTimeoutInMillis(), TimeUnit.MILLISECONDS);
         } catch (final InterruptedException interruptedException) {
             LOG.error("Unexpected interruption while generating report for ticker {}", ticker, interruptedException);
@@ -80,27 +84,37 @@ public class VRSagaOrchestrator {
                 Thread.currentThread().interrupt();
             }
         } else {
+            LOG.info("Valuation report for ticker {} generated from in-memory cache", upperCaseTicker);
             return new ValuationReport.Builder()
                     .recordHolder(recordFromCache)
                     .responseBodyFormatter(this.formatter)
                     .statusCode(HttpStatusCode.OK.getStatusCode())
                     .build();
         }
-        ValuationReport finalResponse;
+        final ValuationReport finalResponse;
         if (recordFromDb == null || recordFromDb.isDataMissing()) {
-            try {
-                //this is the most data we are going to have
-                recordFromFmpApi = this.dataBroker.getDataFromFmpApi(recordFromDb, upperCaseTicker, this.circuitBreaker.getTimeoutForApiCallInMillis());
+            //this is the most data we are going to have
+            recordFromFmpApi = this.dataBroker.getDataFromFmpApi(recordFromDb, upperCaseTicker, this.circuitBreaker.getTimeoutForApiCallInMillis());
+            if (recordFromFmpApi.getCauseOfNullDtos() == null){
+                LOG.info("Valuation report for ticker {} generated from the FMP api", upperCaseTicker);
                 finalResponse = new ValuationReport.Builder()
                         .statusCode(HttpStatusCode.OK.getStatusCode())
                         .recordHolder(recordFromFmpApi)
                         .responseBodyFormatter(this.formatter)
                         .build();
-            } catch (final Throwable throwable) {
+            } else {
+                if (recordFromDb == null && recordFromFmpApi.getDtoCount() == 0) {
+                    LOG.warn("No report was generated for ticker {}! No data found in database and only received error messages from FMP api, sending back the appropriate response to the caller!", upperCaseTicker);
+                } else if (recordFromDb != null && (recordFromDb.getDtoCount() == recordFromFmpApi.getDtoCount())) {
+                    LOG.info("Valuation report for ticker {} generated from database and FMP api error messages", upperCaseTicker);
+                } else {
+                    LOG.info("Valuation report for ticker {} generated from FMP Api partial data and error messages", upperCaseTicker);
+                }
                 //we handle error and return what we can (that is what we have from the db which is equals or a superset of what we have from the cache)
-                finalResponse = this.handleFmpApiError(recordFromDb, throwable, upperCaseTicker);
+                finalResponse = this.handleFmpApiError(recordFromFmpApi, recordFromFmpApi.getCauseOfNullDtos(), upperCaseTicker);
             }
         } else {
+            LOG.info("Valuation report for ticker {} generated from database", upperCaseTicker);
             finalResponse = new ValuationReport.Builder()
                     .recordHolder(recordFromDb)
                     .responseBodyFormatter(this.formatter)
@@ -130,7 +144,7 @@ public class VRSagaOrchestrator {
         return this.returnInternalError(ticker);
     }
 
-    private ValuationReport returnInternalError(final String ticker){
+    private ValuationReport returnInternalError(final String ticker) {
         return new ValuationReport.Builder()
                 .statusCode(HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode())
                 .errorMessage("The server encountered an unexpected internal error when trying to generate report for ticker " + ticker + "!")
@@ -139,7 +153,7 @@ public class VRSagaOrchestrator {
 
     @NotNull
     private ValuationReport handleFmpApiError(final RecordHolder recordHolder, final Throwable throwable, final String ticker) {
-        final boolean noRecord = recordHolder == null;
+        final boolean noRecord = recordHolder == null || recordHolder.getDtoCount() == 0;
         if (throwable instanceof final ApiKeyException ex) {
             return this.translateExceptedExceptions(noRecord, recordHolder, HttpStatusCode.UNAUTHORIZED.getStatusCode(), ex);
         } else if (throwable instanceof final RateLimitReachedException rre) {
