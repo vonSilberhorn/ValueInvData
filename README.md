@@ -48,16 +48,16 @@ For the https client talking to the FMP api, I used the "new" http client librar
 And last but not least, I also used Sonar reports as an IDE plugin and as a GitHub Action to help me maintain high code quality standards.
 
 **Known shortcomings** One that sticks out the most is that the data the app generates the reports from is pretty static. 
-I chose a topic that is not too dynamic in itself, as valuations don't change daily, so even if the "current" stock price in the valuation is stale, 
+I chose a topic that is not too dynamic in itself, as valuations don't change frequently and especially not radically, so even if the "current" stock price in the valuation is stale, 
 the rest of it is pretty relevant for like a month or so. Yet, ideally cached items shouldn't live more than a day and the database entries should also be updated at least daily. 
 
-The other is a lack of containerization, which I plan to work on soon.
+The other is a lack of containerization which ties the running of the server to having at least JRE21 - I plan to work on this soon.
 
 ### How to run the service 
 
 #### In IDE
 
-Since containerizing this app is a next step, for now even I only ran it in IDE - I use IntelliJ. 
+Since containerizing this app is a next step, for now even I only ran it in IDE - I use IntelliJ. JDK21 is needed due to the fact that language level is on the 21 LTS version.
 One of the most important things to note is that to access the Financial Modeling Prep api, you need an api key. As I noted in the code, this would be the responsibility of the app to provide through 
 a secret store like Vault. But since it's still just a demo, you are better off generating a free key at [the FMP website](https://site.financialmodelingprep.com/developer/docs). You can then use the -DFMP_API_KEY=KEY VM Option where KEY is the api key string.
 
