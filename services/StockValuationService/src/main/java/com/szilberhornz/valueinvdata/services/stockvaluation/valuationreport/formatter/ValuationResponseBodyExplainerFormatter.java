@@ -7,7 +7,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTa
 import org.json.JSONObject;
 
 /**
- * This is to generate humanly readable content with explanations, instead of just looking at JSONs.
+ * This is to generate human-readable content with explanations, instead of just looking at JSONs.
  * Of course, it is only intended for demo purposes, as rendering would be the job of the frontend.
  */
 public class ValuationResponseBodyExplainerFormatter implements ValuationResponseBodyFormatter {

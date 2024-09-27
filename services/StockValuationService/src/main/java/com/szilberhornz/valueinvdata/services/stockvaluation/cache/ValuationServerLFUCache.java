@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * This class is a variation of Least Frequently Used Cache implementation. I chose the LFU method because I assume (!)
+ * This class is a variation of Least Frequently Used Cache implementation. I chose the LFU method because I assume
  * that in a real-world setting the queried tickers would follow a kind of Pareto distribution, which means that 80% of the
  * requests are coming for the top 20% of the tickers. After all, most people will look up valuations for S&P500 stocks.
  * <p>
@@ -17,10 +17,12 @@ import java.util.concurrent.CompletableFuture;
  * every get() method rebalances the frequencyCounter TreeMap, which is O(logN) time. I wanted to retain the logic of the
  * LFU while keeping the get() method at O(1). To achieve it, I chose to do the TreeMap manipulation only periodically
  * and on a non-blocking asynchronous thread. This means that the rebalance and eviction takes more time, but in fact that
- * is not a concern at all - the cache growing a bit over the expected capacity doesn't cause any issues unless the expected
- * capacity already occupies too much memory, which should never be the default case.
+ * is not a concern at all as it runs parallel to the executor thread responsible for serving the user request.
+ * Also, the cache growing a bit over the expected capacity doesn't cause any issues unless the expected
+ * capacity already occupies too much memory, which should never be the default case anyway.
  * <p>
  * For the base LFU case I used this as a source: <a href="https://www.geeksforgeeks.org/implement-a-cache-eviction-policy-using-treemap-in-java/">LFU</a>
+ * The async eviction is implemented in the {@link LFUEvictor inner class}
  */
 public class ValuationServerLFUCache extends ValuationServerCache {
 
@@ -44,7 +46,7 @@ public class ValuationServerLFUCache extends ValuationServerCache {
     }
 
     /**
-     *  The get method is still O(1) while in a classic LFU it would be O(logN)
+     *  The get method is still effectively O(1) while in a classic LFU it would be O(logN)
      *  Every {@link ValuationServerLFUCache#rebalanceThreshold}-th call of this method starts a thread and runs the
      *  {@link CacheEvictor#runEviction()} method in a non-blocking way
      */

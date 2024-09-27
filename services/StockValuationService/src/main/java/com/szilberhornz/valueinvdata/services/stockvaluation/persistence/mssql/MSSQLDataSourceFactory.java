@@ -8,6 +8,12 @@ import com.zaxxer.hikari.HikariDataSource;
 import javax.sql.DataSource;
 import java.util.Properties;
 
+/**
+ * This class is responsible for initializing a DataSource pointing to an up and running MSSQL server elsewhere.
+ * If the MSSQL_ADDRESS VM Option is passed at startup, the application will invoke this class instead of the in-memory db
+ * <p>
+ * This DataSource is backed by a HikariCP connection pool.
+ */
 public class MSSQLDataSourceFactory implements DataSourceFactory {
 
     private final DataSource dataSource;

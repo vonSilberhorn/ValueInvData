@@ -3,6 +3,9 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fo
 import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
 import org.json.JSONObject;
 
+/**
+ * This would be the basic formatting for responses for an app running in prod.
+ */
 public class ValuationResponseBodyJSONFormatter implements ValuationResponseBodyFormatter {
 
     @Override

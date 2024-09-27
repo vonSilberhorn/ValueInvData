@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
  * This class is designed to prevent outside entities to change the state of its instances: e.g. a class looking up
  * cached items should be able to see what is inside the item, but changes should only be made within the
  * {@link com.szilberhornz.valueinvdata.services.stockvaluation.cache} package
+ * Classes outside the cache package may construct new RecordHolders though, and also inspect their inner state, just not change it
  * <p/>
  * No need to synchronize this class due to the fact that the ConcurrentHashMap in the cache locks the bucket when performing write operations
  */

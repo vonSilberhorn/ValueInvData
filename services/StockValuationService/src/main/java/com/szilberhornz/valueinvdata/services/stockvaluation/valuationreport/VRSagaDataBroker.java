@@ -17,6 +17,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * This class deals with the data operations of the ValuationReport saga, such as the read and write
+ * to cache and database, and the invoking of the FMP api for data we don't have in persistence.
+ */
 public class VRSagaDataBroker {
 
     private static final Logger LOG = LoggerFactory.getLogger(VRSagaDataBroker.class);

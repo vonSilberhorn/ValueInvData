@@ -10,6 +10,9 @@ import java.sql.SQLException;
 
 import static com.szilberhornz.valueinvdata.services.stockvaluation.persistence.TSQLSyntax.*;
 
+/**
+ * Class responsible for mapping record instances onto SQL queries
+ */
 public final class QueryMapper {
 
     public static PreparedStatement prepareDiscountedCashFlowInsert(final Connection connection, final DiscountedCashFlowDTO dto) throws SQLException {

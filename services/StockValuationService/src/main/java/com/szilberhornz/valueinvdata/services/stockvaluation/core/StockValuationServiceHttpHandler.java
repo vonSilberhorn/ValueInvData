@@ -11,6 +11,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Class responsible for handling and distributing the incoming http requests.
+ */
 public class StockValuationServiceHttpHandler implements HttpHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(StockValuationServiceHttpHandler.class);

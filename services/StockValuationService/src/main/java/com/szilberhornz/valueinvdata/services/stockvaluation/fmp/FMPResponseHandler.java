@@ -16,6 +16,10 @@ import org.slf4j.LoggerFactory;
 import java.net.http.HttpResponse;
 import java.util.concurrent.Callable;
 
+/**
+ * Class responsible for handling the responses from the FMP api, such as transforming it to record
+ * instances, handling errors and retries if needed.
+ */
 public class FMPResponseHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(FMPResponseHandler.class);
