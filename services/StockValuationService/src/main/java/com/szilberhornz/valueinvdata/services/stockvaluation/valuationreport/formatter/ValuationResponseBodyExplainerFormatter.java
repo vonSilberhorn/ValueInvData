@@ -4,6 +4,7 @@ import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
+import org.json.JSONObject;
 
 /**
  * This is to generate humanly readable content with explanations, instead of just looking at JSONs.
@@ -19,41 +20,77 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
 
             """;
 
-    private static final String PTS_EXPLAINED = "Last month %d stock analysts made price target prediction about this stock, " +
-            "with and average price target of %.2f. \nLast quarter %d analysts made predictions with %.2f average price target!\n%s \n";
+    private static final String PTS_EXPLAINED = """
+            Last month %d stock analysts made price target prediction about this stock, \
+            with and average price target of %.2f.\s
+            Last quarter %d analysts made predictions with %.2f average price target!
+            %s\s
+            """;
 
-    private static final String PTC_EXPLAINED = "Overall, the highest projection from any analyst was %.2f, while the lowest was %.2f, " +
-            "with the consensus being around %.2f and the median prediction at %.2f \n" +
-            "Price target predictions are the stock analysts own overall calculations for a price point where they think a " +
-            "stock would be fairly valued. \nThis is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/\n\n";
+    private static final String PTC_EXPLAINED = """
+            Overall, the highest projection from any analyst was %.2f, while the lowest was %.2f, \
+            with the consensus being around %.2f and the median prediction at %.2f\s
+            Price target predictions are the stock analysts own overall calculations for a price point where they think a \
+            stock would be fairly valued.\s
+            This is based on a number of factors, you can find out more about those at https://www.investopedia.com/investing/target-prices-and-sound-investing/""";
+
+    private static final double NINETY_PERCENT = 0.9;
+    private static final double HUNDERD_AND_TEN_PERCENT = 1.1;
 
     @Override
     public String getFormattedResponseBody(final RecordHolder recordHolder, final String errorMessage) {
-        if (recordHolder == null){
-            if (errorMessage == null || errorMessage.isBlank()){
+        if (recordHolder == null || recordHolder.getDtoCount() == 0) {
+            if (errorMessage == null || errorMessage.isBlank()) {
                 return "Could not find any data!";
             } else {
-                return errorMessage;
+                final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
+                if (temporalJsonFormatter.has("Error Message")) {
+                    //some error from the FMP Api
+                    return temporalJsonFormatter.getString("Error Message");
+                } else {
+                    //invalid ticker query
+                    return errorMessage;
+                }
+
             }
         } else {
             final StringBuilder stringBuilder = new StringBuilder();
             double actualStockPrice = 0;
-            if (recordHolder.getDiscountedCashFlowDto() != null){
+            final boolean hasDcfData = recordHolder.getDiscountedCashFlowDto() != null;
+            final boolean hasPtsData = recordHolder.getPriceTargetSummaryDto() != null;
+            final boolean hasPtcData = recordHolder.getPriceTargetConsensusDto() != null;
+            if (hasDcfData) {
                 actualStockPrice = recordHolder.getDiscountedCashFlowDto().stockPrice();
                 stringBuilder.append(this.getDcfExplanation(recordHolder.getDiscountedCashFlowDto()));
             }
-            if (recordHolder.getPriceTargetSummaryDto() != null) {
+            if (hasPtsData) {
                 stringBuilder.append(this.getPtsExplanation(recordHolder.getPriceTargetSummaryDto(), actualStockPrice));
             }
-            if (recordHolder.getPriceTargetConsensusDto() != null) {
+            if (hasPtcData) {
                 stringBuilder.append(this.getPtcExplanation(recordHolder.getPriceTargetConsensusDto()));
             }
-            if (!stringBuilder.isEmpty()) {
-                stringBuilder.append("\nDisclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n");
+            //special case when we get api key related issues from FMP Api. This would normally be an internal thing
+            //since we should own the api key, but for demo version, when the user supplies the key, we should display these issues
+            if (hasDcfData && !hasPtcData && !hasPtsData && !errorMessage.isBlank()) {
+                stringBuilder.append("Unfortunately no more data is available at this time, as the FMP Api returned the following response for the " +
+                        "PriceTargetSummary and PriceTargetConsensus calls: ");
+                final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
+                if (temporalJsonFormatter.has("Error Message")) {
+                    stringBuilder.append(temporalJsonFormatter.getString("Error Message"));
+                } else {
+                    stringBuilder.append(errorMessage);
+                }
+            } else if (errorMessage != null && !errorMessage.isBlank()) {
+                final JSONObject temporalJsonFormatter = new JSONObject(errorMessage);
+                if (temporalJsonFormatter.has("Error Message")) {
+                    stringBuilder.append(temporalJsonFormatter.getString("Error Message"));
+                } else {
+                    stringBuilder.append("Encountered the following issue while retrieving the data: ");
+                    stringBuilder.append(errorMessage);
+                }
             }
-            if (errorMessage != null && !errorMessage.isBlank()) {
-                stringBuilder.append("Encountered the following issue while retrieving the data: ");
-                stringBuilder.append(errorMessage);
+            if (!stringBuilder.isEmpty()) {
+                stringBuilder.append("\n\nDisclaimer: this is solely for educational purposes and does not constitute as financial or investment advice!\n");
             }
             return stringBuilder.toString();
         }
@@ -63,7 +100,7 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
         return String.format(PTC_EXPLAINED, ptcDto.targetHigh(), ptcDto.targetLow(), ptcDto.targetConsensus(), ptcDto.targetMedian());
     }
 
-    private String getPtsExplanation(final PriceTargetSummaryDTO ptsDto, final double stockPrice){
+    private String getPtsExplanation(final PriceTargetSummaryDTO ptsDto, final double stockPrice) {
         return String.format(PTS_EXPLAINED, ptsDto.lastMonth(), ptsDto.lastMonthAvgPriceTarget(), ptsDto.lastQuarter(), ptsDto.lastQuarterAvgPriceTarget(), this.ptsValuationMeaning(ptsDto, stockPrice));
     }
 
@@ -71,16 +108,16 @@ public class ValuationResponseBodyExplainerFormatter implements ValuationRespons
         return String.format(DCF_EXPLAINED, dcfDto.dateString(), dcfDto.ticker(), dcfDto.dcf(), dcfDto.stockPrice(), this.dcfValuationMeaning(dcfDto));
     }
 
-    private String ptsValuationMeaning(final PriceTargetSummaryDTO ptsDto, final double stockPrice){
+    private String ptsValuationMeaning(final PriceTargetSummaryDTO ptsDto, final double stockPrice) {
         if (stockPrice != 0) {
             final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("This suggests that analyst believe the stock price ");
             final double avgPrediction = (ptsDto.lastMonthAvgPriceTarget() + ptsDto.lastQuarterAvgPriceTarget()) / 2;
-            if (avgPrediction*0.9 < stockPrice && stockPrice < avgPrediction*1.1) {
+            if (avgPrediction * NINETY_PERCENT < stockPrice && stockPrice < avgPrediction * HUNDERD_AND_TEN_PERCENT) {
                 stringBuilder.append("is very close to its fair value so holding or selling might be better options than buying.");
             } else if (avgPrediction > stockPrice) {
                 stringBuilder.append("has a potential to climb in the future, which makes it a candidate to buy and hold.");
-            } else if (stockPrice > avgPrediction){
+            } else if (stockPrice > avgPrediction) {
                 stringBuilder.append("may be overvalued and not a good candidate for buying.");
             }
             return stringBuilder.toString();

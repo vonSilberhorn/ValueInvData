@@ -19,4 +19,8 @@ public interface ValuationDBRepository {
     PriceTargetConsensusDTO queryPriceTargetConsensusData(String ticker);
 
     void insertFullRecord(RecordHolder recordHolder);
+
+    void insertDiscountedCashFlowData(DiscountedCashFlowDTO discountedCashFlowDTO);
+    void insertPriceTargetSummaryData(PriceTargetSummaryDTO priceTargetSummaryDTO);
+    void insertPriceTargetConsensusData(PriceTargetConsensusDTO priceTargetConsensusDTO);
 }

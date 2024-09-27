@@ -21,6 +21,8 @@ public class RecordHolder {
     private PriceTargetConsensusDTO priceTargetConsensusDto;
     private PriceTargetSummaryDTO priceTargetSummaryDto;
 
+    private Throwable causeOfNullDtos = null;
+
     private RecordHolder(final String ticker, final DiscountedCashFlowDTO discountedCashFlowDto, final PriceTargetConsensusDTO priceTargetConsensusDto, final PriceTargetSummaryDTO priceTargetSummaryDto) {
         this.ticker = ticker;
         this.discountedCashFlowDto = discountedCashFlowDto;
@@ -28,15 +30,49 @@ public class RecordHolder {
         this.priceTargetSummaryDto = priceTargetSummaryDto;
     }
 
+    private RecordHolder(final String ticker, final DiscountedCashFlowDTO discountedCashFlowDto, final PriceTargetConsensusDTO priceTargetConsensusDto,
+                         final PriceTargetSummaryDTO priceTargetSummaryDto, final Throwable causeOfNullDtos) {
+        this.ticker = ticker;
+        this.discountedCashFlowDto = discountedCashFlowDto;
+        this.priceTargetConsensusDto = priceTargetConsensusDto;
+        this.priceTargetSummaryDto = priceTargetSummaryDto;
+        this.causeOfNullDtos = causeOfNullDtos;
+    }
+
     //we allow outside entities to get an immutable instance - immutable for them as they don't see the accessors
     public static RecordHolder newRecordHolder(@NotNull final String ticker, @Nullable final DiscountedCashFlowDTO dcfDto, @Nullable final PriceTargetConsensusDTO ptcDto, @Nullable final PriceTargetSummaryDTO ptsDto){
         return new RecordHolder(ticker, dcfDto, ptcDto, ptsDto);
     }
 
+    public static RecordHolder newRecordHolder(@NotNull final String ticker, @Nullable final DiscountedCashFlowDTO dcfDto,
+                                               @Nullable final PriceTargetConsensusDTO ptcDto, @Nullable final PriceTargetSummaryDTO ptsDto,
+                                               final Throwable causeOfNullDtos){
+        return new RecordHolder(ticker, dcfDto, ptcDto, ptsDto, causeOfNullDtos);
+    }
+
+    public int getDtoCount(){
+        int result = 0;
+        if (this.discountedCashFlowDto != null) {
+            result++;
+        }
+        if (this.priceTargetConsensusDto != null) {
+            result++;
+        }
+        if (this.priceTargetSummaryDto != null) {
+            result++;
+        }
+        return result;
+    }
+
+
     public boolean isDataMissing(){
         return this.discountedCashFlowDto == null
                 || this.priceTargetSummaryDto == null
                 || this.priceTargetConsensusDto == null;
+    }
+
+    public Throwable getCauseOfNullDtos(){
+        return this.causeOfNullDtos;
     }
 
     //we don't allow anyone to construct this object outside the actual cache implementors
