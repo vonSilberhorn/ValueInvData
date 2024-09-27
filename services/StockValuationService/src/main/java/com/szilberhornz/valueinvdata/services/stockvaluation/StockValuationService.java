@@ -9,10 +9,12 @@ import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+/**
+ * The server class. Listening for http requests and using a thread pool for possible concurrent execution
+ */
 public class StockValuationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StockValuationService.class);
-
 
     public static void main(final String[] args) throws IOException {
         final String serviceName = StockValuationService.class.getSimpleName();

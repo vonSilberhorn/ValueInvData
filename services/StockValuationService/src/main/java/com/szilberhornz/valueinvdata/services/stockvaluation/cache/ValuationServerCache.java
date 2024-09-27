@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Abstract class to provide extendibility in case the original caching solution need to be replaced.
+ * Abstract class to provide extendibility in case the original caching solution needs to be replaced.
  */
 public abstract class ValuationServerCache {
 

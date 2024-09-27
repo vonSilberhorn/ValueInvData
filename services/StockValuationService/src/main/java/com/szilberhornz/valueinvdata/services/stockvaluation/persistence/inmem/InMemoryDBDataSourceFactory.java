@@ -15,7 +15,6 @@ import java.io.InputStreamReader;
 import java.sql.*;
 import java.time.Duration;
 
-
 /**
  * The in memory implementation initializes a datasource and executes a bunch of sql statements to
  * create a desired state: creating the tables and loading a bit of data. This is a mission-critical part

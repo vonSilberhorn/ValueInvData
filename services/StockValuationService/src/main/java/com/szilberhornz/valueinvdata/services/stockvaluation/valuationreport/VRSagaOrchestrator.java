@@ -18,8 +18,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Error messages are only included in the ValuationReports in case of invalid ticker request or if the Fmp api
- * sent back rate limit or api key related errors
+ * The orchestrator class for the ValuationReport saga. Responsible for receiving the http request coming on
+ * /valuation-report?ticker=TICKER and generating report for the requested TICKER.
+ * It first tries the cache, then the database and tries to plug in any missing data from the FMP api, then
+ * send as the new data back to persistence and cache. Uses simple circuit breaker logic for timeouts, and also
+ * relies heavily on asynchronous, parallel execution using CompletableFuture instances.
  */
 public class VRSagaOrchestrator {
 

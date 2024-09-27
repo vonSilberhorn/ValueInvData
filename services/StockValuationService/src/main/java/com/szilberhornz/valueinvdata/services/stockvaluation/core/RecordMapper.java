@@ -21,8 +21,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
-
 /**
+ * Mapping HttpResponses from the FMP api and ResultSets from the database on our record types.
+ * <p>
  * The mapping from ResultSets corresponds to how the MSSQL driver translates MSSQL server types to Java types
  * as described here: <a href="https://learn.microsoft.com/en-us/sql/language-extensions/how-to/java-to-sql-data-types?view=sql-server-ver16">MSSQL Java types</a>
  */

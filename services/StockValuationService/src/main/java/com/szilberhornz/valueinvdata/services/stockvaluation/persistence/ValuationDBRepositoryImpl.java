@@ -232,13 +232,13 @@ public final class ValuationDBRepositoryImpl implements ValuationDBRepository {
     private static class FailureHandler {
 
         private static final Set<Integer> RETRYABLE_SQL_ERRORS = Set.of(
-                617, //cannot locate work table, please run the query again
+                617,  //cannot locate work table, please run the query again
                 1204, //cannot obtain lock
                 1205, //deadlock
                 1222, //lock request timeout
                 1807, //cannot obtain exclusive lock
                 3960, //snapshot update conflict
-                8645 //timeout while waiting for memory
+                8645  //timeout while waiting for memory
         );
 
         private void handleFailure(final SQLException sqlException, final String logMsg){
