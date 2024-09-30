@@ -3,7 +3,6 @@ package com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache;
 import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.DiscountedCashFlowDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetConsensusDTO;
 import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetSummaryDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

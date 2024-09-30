@@ -18,14 +18,15 @@ class RecordMapperTest {
 
     @Test
     void successfulDcfConstructionFromHttpResponse(){
-        final String validStringResponse = "[\n" +
-                "\t{\n" +
-                "\t\t\"symbol\": \"AAPL\",\n" +
-                "\t\t\"date\": \"2023-03-03\",\n" +
-                "\t\t\"dcf\": 151.0983806294802,\n" +
-                "\t\t\"Stock Price\": 149.65\n" +
-                "\t}\n" +
-                "]";
+        final String validStringResponse = """
+                [
+                \t{
+                \t\t"symbol": "AAPL",
+                \t\t"date": "2023-03-03",
+                \t\t"dcf": 151.0983806294802,
+                \t\t"Stock Price": 149.65
+                \t}
+                ]""";
         final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         when(response.body()).thenReturn(validStringResponse);
         final DiscountedCashFlowDTO result = RecordMapper.newDcfDto(response);
@@ -36,14 +37,15 @@ class RecordMapperTest {
     }
 
     @Test
-    void failedDcfContructionShouldReturnNull(){
-        final String invalidStringResponse = "[\n" +
-                "\t{\n" +
-                "\t\t\"symbol\": \"AAPL\",\n" +
-                "\t\t\"dcf\": 151.0983806294802,\n" +
-                "\t\t\"Stock Price\": 149.65\n" +
-                "\t}\n" +
-                "]";
+    void failedDcfConstructionShouldReturnNull(){
+        final String invalidStringResponse = """
+                [
+                \t{
+                \t\t"symbol": "AAPL",
+                \t\t"dcf": 151.0983806294802,
+                \t\t"Stock Price": 149.65
+                \t}
+                ]""";
         final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         when(response.body()).thenReturn(invalidStringResponse);
         final DiscountedCashFlowDTO result = RecordMapper.newDcfDto(response);
@@ -52,15 +54,16 @@ class RecordMapperTest {
 
     @Test
     void successfulPtcConstructionFromHttpResponse() {
-        final String validStringResponse = "[\n" +
-                "\t{\n" +
-                "\t\t\"symbol\": \"AAPL\",\n" +
-                "\t\t\"targetHigh\": 240,\n" +
-                "\t\t\"targetLow\": 110,\n" +
-                "\t\t\"targetConsensus\": 189.18,\n" +
-                "\t\t\"targetMedian\": 195\n" +
-                "\t}\n" +
-                "]";
+        final String validStringResponse = """
+                [
+                \t{
+                \t\t"symbol": "AAPL",
+                \t\t"targetHigh": 240,
+                \t\t"targetLow": 110,
+                \t\t"targetConsensus": 189.18,
+                \t\t"targetMedian": 195
+                \t}
+                ]""";
         final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         when(response.body()).thenReturn(validStringResponse);
         final PriceTargetConsensusDTO result = RecordMapper.newPtcDto(response);
@@ -71,15 +74,16 @@ class RecordMapperTest {
     }
 
     @Test
-    void failedPtcContructionShouldReturnNull() {
-        final String invalidStringResponse = "[\n" +
-                "\t{\n" +
-                "\t\t\"symbol\": \"AAPL\",\n" +
-                "\t\t\"targetHigh\": 240,\n" +
-                "\t\t\"targetConsensus\": 189.18,\n" +
-                "\t\t\"targetMedian\": 195\n" +
-                "\t}\n" +
-                "]";
+    void failedPtcConstructionShouldReturnNull() {
+        final String invalidStringResponse = """
+                [
+                \t{
+                \t\t"symbol": "AAPL",
+                \t\t"targetHigh": 240,
+                \t\t"targetConsensus": 189.18,
+                \t\t"targetMedian": 195
+                \t}
+                ]""";
         final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         when(response.body()).thenReturn(invalidStringResponse);
         final PriceTargetConsensusDTO result = RecordMapper.newPtcDto(response);
@@ -88,20 +92,21 @@ class RecordMapperTest {
 
     @Test
     void successfulPtsConstructionFromHttpResponse() {
-        final String validStringResponse = "[\n" +
-                "\t{\n" +
-                "\t\t\"symbol\": \"AAPL\",\n" +
-                "\t\t\"lastMonth\": 5,\n" +
-                "\t\t\"lastMonthAvgPriceTarget\": 220.2,\n" +
-                "\t\t\"lastQuarter\": 11,\n" +
-                "\t\t\"lastQuarterAvgPriceTarget\": 217.18,\n" +
-                "\t\t\"lastYear\": 46,\n" +
-                "\t\t\"lastYearAvgPriceTarget\": 186.8,\n" +
-                "\t\t\"allTime\": 113,\n" +
-                "\t\t\"allTimeAvgPriceTarget\": 186.31,\n" +
-                "\t\t\"publishers\": \"[\\\"Benzinga\\\",\\\"TheFly\\\",\\\"Pulse 2.0\\\",\\\"MarketWatch\\\",\\\"TipRanks Contributor\\\",\\\"Investing\\\",\\\"StreetInsider\\\",\\\"Barrons\\\",\\\"Investor's Business Daily\\\"]\"\n" +
-                "\t}\n" +
-                "]";
+        final String validStringResponse = """
+                [
+                \t{
+                \t\t"symbol": "AAPL",
+                \t\t"lastMonth": 5,
+                \t\t"lastMonthAvgPriceTarget": 220.2,
+                \t\t"lastQuarter": 11,
+                \t\t"lastQuarterAvgPriceTarget": 217.18,
+                \t\t"lastYear": 46,
+                \t\t"lastYearAvgPriceTarget": 186.8,
+                \t\t"allTime": 113,
+                \t\t"allTimeAvgPriceTarget": 186.31,
+                \t\t"publishers": "[\\"Benzinga\\",\\"TheFly\\",\\"Pulse 2.0\\",\\"MarketWatch\\",\\"TipRanks Contributor\\",\\"Investing\\",\\"StreetInsider\\",\\"Barrons\\",\\"Investor's Business Daily\\"]"
+                \t}
+                ]""";
         final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         when(response.body()).thenReturn(validStringResponse);
         final PriceTargetSummaryDTO result = RecordMapper.newPtsDto(response);
@@ -112,20 +117,21 @@ class RecordMapperTest {
     }
 
     @Test
-    void failedPtsContructionShouldReturnNull() {
-        final String invalidStringResponse = "[\n" +
-                "\t{\n" +
-                "\t\t\"symbol\": \"AAPL\",\n" +
-                "\t\t\"lastMonth\": 5,\n" +
-                "\t\t\"lastQuarter\": 11,\n" +
-                "\t\t\"lastQuarterAvgPriceTarget\": 217.18,\n" +
-                "\t\t\"lastYear\": 46,\n" +
-                "\t\t\"lastYearAvgPriceTarget\": 186.8,\n" +
-                "\t\t\"allTime\": 113,\n" +
-                "\t\t\"allTimeAvgPriceTarget\": 186.31,\n" +
-                "\t\t\"publishers\": \"[\\\"Benzinga\\\",\\\"TheFly\\\",\\\"Pulse 2.0\\\",\\\"MarketWatch\\\",\\\"TipRanks Contributor\\\",\\\"Investing\\\",\\\"StreetInsider\\\",\\\"Barrons\\\",\\\"Investor's Business Daily\\\"]\"\n" +
-                "\t}\n" +
-                "]";
+    void failedPtsConstructionShouldReturnNull() {
+        final String invalidStringResponse = """
+                [
+                \t{
+                \t\t"symbol": "AAPL",
+                \t\t"lastMonth": 5,
+                \t\t"lastQuarter": 11,
+                \t\t"lastQuarterAvgPriceTarget": 217.18,
+                \t\t"lastYear": 46,
+                \t\t"lastYearAvgPriceTarget": 186.8,
+                \t\t"allTime": 113,
+                \t\t"allTimeAvgPriceTarget": 186.31,
+                \t\t"publishers": "[\\"Benzinga\\",\\"TheFly\\",\\"Pulse 2.0\\",\\"MarketWatch\\",\\"TipRanks Contributor\\",\\"Investing\\",\\"StreetInsider\\",\\"Barrons\\",\\"Investor's Business Daily\\"]"
+                \t}
+                ]""";
         final HttpResponse<String> response = Mockito.mock(HttpResponse.class);
         when(response.body()).thenReturn(invalidStringResponse);
         final PriceTargetSummaryDTO result = RecordMapper.newPtsDto(response);

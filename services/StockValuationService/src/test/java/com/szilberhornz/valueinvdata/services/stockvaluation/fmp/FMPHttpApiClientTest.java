@@ -91,7 +91,7 @@ class FMPHttpApiClientTest {
     }
 
     @Test
-    void testDiscountedCashFlowRequestNoApiKeyFoundException() throws NoApiKeyFoundException, IOException, InterruptedException {
+    void testDiscountedCashFlowRequestNoApiKeyFoundException() throws NoApiKeyFoundException {
         final String noApiKeyExceptionMessage = "Test exception!";
         final NoApiKeyFoundException exception = new NoApiKeyFoundException(noApiKeyExceptionMessage);
         when(this.authorizerMock.retrieveApiKey()).thenThrow(exception);

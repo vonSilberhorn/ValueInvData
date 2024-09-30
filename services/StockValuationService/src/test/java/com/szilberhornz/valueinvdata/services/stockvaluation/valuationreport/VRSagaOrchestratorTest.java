@@ -36,7 +36,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void cachedItemShouldBeReturnedImmediately() throws Throwable {
+    void cachedItemShouldBeReturnedImmediately() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         final RecordHolder cachedRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, this.ptsDto);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(cachedRecord);
@@ -50,7 +50,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void nullCachedItemShouldTriggerDbCall() throws Throwable {
+    void nullCachedItemShouldTriggerDbCall() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, this.ptsDto);
@@ -65,7 +65,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void incompleteCachedItemShouldTriggerDbCall() throws Throwable {
+    void incompleteCachedItemShouldTriggerDbCall() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         final RecordHolder cachedRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, null);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(cachedRecord);
@@ -81,7 +81,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void illegalStateDbShouldReturnHttp500() throws Throwable {
+    void illegalStateDbShouldReturnHttp500() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         final RecordHolder cachedRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, null);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(cachedRecord);
@@ -96,7 +96,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpApiShouldBeCalledIfNoCachedOrDbDataIsComplete() throws Throwable {
+    void fmpApiShouldBeCalledIfNoCachedOrDbDataIsComplete() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         final RecordHolder cachedRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, null);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(cachedRecord);
@@ -112,7 +112,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpApiShouldBeCalledIfEveryRecordIsNull() throws Throwable {
+    void fmpApiShouldBeCalledIfEveryRecordIsNull() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
@@ -126,7 +126,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpApiKeyExceptionShouldProduce401() throws Throwable {
+    void fmpApiKeyExceptionShouldProduce401() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
@@ -141,7 +141,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpRateLimitExceptionShouldProduce429() throws Throwable {
+    void fmpRateLimitExceptionShouldProduce429() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
@@ -156,7 +156,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpRandomExceptionShouldProduce500() throws Throwable {
+    void fmpRandomExceptionShouldProduce500() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
@@ -170,7 +170,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpApiKeyExceptionWithPartialDataShouldProduce200() throws Throwable {
+    void fmpApiKeyExceptionWithPartialDataShouldProduce200() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
@@ -187,7 +187,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpRateLimitExceptionWithPartialDataShouldProduce200() throws Throwable {
+    void fmpRateLimitExceptionWithPartialDataShouldProduce200() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
@@ -204,7 +204,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpRandomExceptionButPartialDataShouldProduce200() throws Throwable {
+    void fmpRandomExceptionButPartialDataShouldProduce200() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         final RecordHolder dbRecord = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, null);
@@ -221,7 +221,7 @@ class VRSagaOrchestratorTest {
     }
 
     @Test
-    void fmpRandomExceptionWithoutEvenPartialDataShouldProduce500() throws Throwable {
+    void fmpRandomExceptionWithoutEvenPartialDataShouldProduce500() {
         Mockito.when(this.tickerCacheMock.tickerExists("DUMMY")).thenReturn(true);
         Mockito.when(this.dataBrokerMock.getFromCache("DUMMY")).thenReturn(null);
         Mockito.when(this.dataBrokerMock.getDataFromDb(null,"DUMMY")).thenReturn(null);
