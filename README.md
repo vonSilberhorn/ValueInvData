@@ -51,13 +51,11 @@ And last but not least, I also used Sonar reports as an IDE plugin and as a GitH
 I chose a topic that is not too dynamic in itself, as valuations don't change frequently and especially not radically, so even if the "current" stock price in the valuation is stale, 
 the rest of it is pretty relevant for like a month or so. Yet, ideally cached items shouldn't live more than a day and the database entries should also be updated at least daily. 
 
-The other is a lack of containerization which ties the running of the server to having at least JRE21 - I plan to work on this soon.
-
 ### How to run the service 
 
 #### In IDE
 
-Since containerizing this app is a next step, for now even I only ran it in IDE - I use IntelliJ. JDK21 is needed due to the fact that language level is on the 21 LTS version.
+JDK21 is needed due to the fact that language level is on the 21 LTS version.
 One of the most important things to note is that to access the Financial Modeling Prep api, you need an api key. As I noted in the code, this would be the responsibility of the app to provide through 
 a secret store like Vault. But since it's still just a demo, you are better off generating a free key at [the FMP website](https://site.financialmodelingprep.com/developer/docs). You can then use the -DFMP_API_KEY=KEY VM Option where KEY is the api key string.
 
@@ -75,12 +73,16 @@ You can check more possible configurations in the [AppContext class](services/St
 
 After starting the service, you can use a browser or any other tool to call http://localhost:8080/valuation-report?ticker=AAPL to see the output, where AAPL can be changed to any other valid ticker.
 
-That's it!
-
 
 #### Docker
 
-// this is a todo item. As one of the next steps, I plan to containerize the app to makes sure it could run anywhere without the need for anyone to build it locally.
+If you have Docker locally, you don't need Maven or JDK21 or even any kind of Java Runtime Environment. The Dockerfile is set up to build the project from source and provide a runnable Docker image called stockvaluationservice.
+So if you run 'docker compose up --build' in the project root (ValueInvData/), it should succeed irrespective of any environment setting. 
+Then you can run it with the 'docker run -e JAVA_OPTS="-DFMP_API_KEY=xxx -DMSSQL_USER=xyz" -d -p 8080:8080 stockvaluationservice' where JAVA_OPTS are the VM Options as explained above, and the -p 8080:8080 forwards traffic from the localhost port 8080 to the container port 8080. You can of course use any other localhost port, but the container port is defined in the dockerfile: if you want to change that, you need to rebuild the image.
+
+Calling the service can be done the same way as explained above in the IDE section.
+
+That's it!
 
 ## What's next
 
