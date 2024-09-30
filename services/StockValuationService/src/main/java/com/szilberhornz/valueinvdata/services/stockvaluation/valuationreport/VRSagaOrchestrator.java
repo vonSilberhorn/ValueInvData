@@ -85,6 +85,7 @@ public class VRSagaOrchestrator {
         }
         if (recordFromDb != null && !recordFromDb.isDataMissing()){
             LOG.info("Valuation report for ticker {} generated from database", upperCaseTicker);
+            this.dataBroker.addToCache(upperCaseTicker, recordFromCache, recordFromDb);
             return new ValuationReport.Builder()
                     .recordHolder(recordFromDb)
                     .responseBodyFormatter(this.formatter)

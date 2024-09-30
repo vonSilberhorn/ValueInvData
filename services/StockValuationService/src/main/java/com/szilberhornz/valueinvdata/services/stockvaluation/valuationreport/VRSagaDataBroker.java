@@ -125,7 +125,6 @@ public class VRSagaDataBroker {
         if (recordFromFmpApi != null) {
             this.addToCache(ticker, recordFromCache, recordFromFmpApi);
             this.writeToDb(ticker, recordFromDb, recordFromFmpApi);
-            //write records from db to cache
         }
     }
 
@@ -149,7 +148,7 @@ public class VRSagaDataBroker {
         }
     }
 
-    private void addToCache(final String ticker, final RecordHolder recordFromCache, final RecordHolder superSet){
+    public void addToCache(final String ticker, final RecordHolder recordFromCache, final RecordHolder superSet){
         if (recordFromCache == null){
             LOG.info("Adding full {} ticker data to the cache!", ticker);
             this.valuationServerCache.put(ticker, superSet.getDiscountedCashFlowDto());
