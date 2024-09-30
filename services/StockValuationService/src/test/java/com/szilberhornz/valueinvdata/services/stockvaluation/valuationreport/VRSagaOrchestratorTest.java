@@ -1,18 +1,16 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.TickerCache;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.RateLimitReachedException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.TickerCache;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetConsensusDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.RateLimitReachedException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.ApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.circuitbreaker.VRSagaDefaultCircuitBreaker;
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.formatter.ValuationResponseBodyJSONFormatter;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;

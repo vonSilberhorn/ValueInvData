@@ -1,10 +1,10 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.TickerCache;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.HttpStatusCode;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.RateLimitReachedException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.TickerCache;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.HttpStatusCode;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.RateLimitReachedException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.ApiKeyException;
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.circuitbreaker.VRSagaCircuitBreaker;
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.formatter.ValuationResponseBodyFormatter;
 import org.jetbrains.annotations.NotNull;

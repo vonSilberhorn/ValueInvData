@@ -1,8 +1,9 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.fmp;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.HttpClientFactory;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.FMPAuthorizer;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.HttpClientFactory;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.FMPApiHttpClient;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.FMPAuthorizer;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.NoApiKeyFoundException;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;

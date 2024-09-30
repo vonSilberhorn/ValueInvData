@@ -1,9 +1,9 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.formatter;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetConsensusDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetSummaryDTO;
 import org.json.JSONObject;
 
 /**

@@ -1,12 +1,12 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.ValuationServerCache;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.FMPResponseHandler;
-import com.szilberhornz.valueinvdata.services.stockvaluation.persistence.api.ValuationDBRepository;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.ValuationServerCache;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetConsensusDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.FMPResponseHandler;
+import com.szilberhornz.valueinvdata.services.stockvaluation.repository.api.ValuationDBRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.HttpStatusCode;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.HttpStatusCode;
 import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.formatter.ValuationResponseBodyJSONFormatter;
 import org.junit.jupiter.api.Test;
 
