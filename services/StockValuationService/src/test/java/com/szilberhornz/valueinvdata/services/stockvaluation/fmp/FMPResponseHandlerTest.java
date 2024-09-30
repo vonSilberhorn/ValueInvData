@@ -1,12 +1,15 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.fmp;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InsufficientPrivilegesException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.InvalidApiKeyException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.NoApiKeyFoundException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetConsensusDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.FMPApiHttpClient;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.FMPResponseHandler;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.RateLimitReachedException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.InsufficientPrivilegesException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.InvalidApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.NoApiKeyFoundException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

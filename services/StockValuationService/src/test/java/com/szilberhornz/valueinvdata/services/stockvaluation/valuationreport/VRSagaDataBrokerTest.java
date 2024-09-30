@@ -1,14 +1,14 @@
 package com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport;
 
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.RecordHolder;
-import com.szilberhornz.valueinvdata.services.stockvaluation.cache.ValuationServerCache;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.DiscountedCashFlowDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetConsensusDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.core.record.PriceTargetSummaryDTO;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.FMPResponseHandler;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.RateLimitReachedException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.fmp.authr.ApiKeyException;
-import com.szilberhornz.valueinvdata.services.stockvaluation.persistence.api.ValuationDBRepository;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.RecordHolder;
+import com.szilberhornz.valueinvdata.services.stockvaluation.utility.cache.ValuationServerCache;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.DiscountedCashFlowDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetConsensusDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.model.record.PriceTargetSummaryDTO;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.FMPResponseHandler;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.RateLimitReachedException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.valuationreport.fmp.authr.ApiKeyException;
+import com.szilberhornz.valueinvdata.services.stockvaluation.repository.api.ValuationDBRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -51,7 +51,7 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
-    void getDataFromFmpApiShouldGetAllMissingDTO() throws Throwable {
+    void getDataFromFmpApiShouldGetAllMissingDTO() {
         final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
         sut.getDataFromFmpApi(null, "DUMMY", 2500);
         Mockito.verify(this.fmpHandlerMock, Mockito.times(1)).getDiscountedCashFlowReportFromFmpApi("DUMMY");
@@ -60,7 +60,7 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
-    void getDataFromFmpApiFullResultTest() throws Throwable {
+    void getDataFromFmpApiFullResultTest() {
         Mockito.when(this.fmpHandlerMock.getDiscountedCashFlowReportFromFmpApi("DUMMY")).thenReturn(this.dcfDto);
         Mockito.when(this.fmpHandlerMock.getPriceTargetConsensusReportFromFmpApi("DUMMY")).thenReturn(this.ptcDto);
         Mockito.when(this.fmpHandlerMock.getPriceTargetSummaryReportFromFmpApi("DUMMY")).thenReturn(this.ptsDto);
@@ -73,7 +73,7 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
-    void getDataFromFmpApiShouldGetMissingDcf() throws Throwable {
+    void getDataFromFmpApiShouldGetMissingDcf() {
         final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
         final RecordHolder recordFromDb = RecordHolder.newRecordHolder("DUMMY", null, this.ptcDto, this.ptsDto);
         sut.getDataFromFmpApi(recordFromDb, "DUMMY", 2500);
@@ -83,7 +83,7 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
-    void getDataFromFmpApiShouldGetMissingPtc() throws Throwable {
+    void getDataFromFmpApiShouldGetMissingPtc() {
         final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
         final RecordHolder recordFromDb = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, null, this.ptsDto);
         sut.getDataFromFmpApi(recordFromDb, "DUMMY", 2500);
@@ -93,7 +93,7 @@ class VRSagaDataBrokerTest {
     }
 
     @Test
-    void getDataFromFmpApiShouldGetMissingPts() throws Throwable {
+    void getDataFromFmpApiShouldGetMissingPts() {
         final VRSagaDataBroker sut = new VRSagaDataBroker(this.dbRepositoryMock, this.serverCacheMock, this.fmpHandlerMock);
         final RecordHolder recordFromDb = RecordHolder.newRecordHolder("DUMMY", this.dcfDto, this.ptcDto, null);
         sut.getDataFromFmpApi(recordFromDb, "DUMMY", 2500);
